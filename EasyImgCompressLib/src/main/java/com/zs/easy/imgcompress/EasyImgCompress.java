@@ -1,6 +1,8 @@
 package com.zs.easy.imgcompress;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.text.TextUtils;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -19,13 +21,15 @@ import java.util.List;
 public class EasyImgCompress {
     private final String TAG = "EasyImgCompress";
     private Context context;
-    private int unCompressMinPx;
+    private int unCompressMinPx = 1000;
     private int maxPx = 1200;
     private int maxSize = 200;
     private String cacheDir = context.getCacheDir().getPath() + File.separator + "CommpressCache";
     private boolean enablePxCompress = true;
     private boolean enableQualityCompress = true;
     private boolean enableReserveRaw = true;
+    private String imageUrl = "";
+    private List<String> imageUrls = new ArrayList<>();
     private OnCompressSinglePicListener onCompressSinglePicListener;
     private OnCompressMultiplePicsListener onCompressMultiplePicsListener;
 
@@ -43,6 +47,8 @@ public class EasyImgCompress {
         this.enablePxCompress = builder.enablePxCompress;
         this.enableQualityCompress = builder.enableQualityCompress;
         this.enableReserveRaw = builder.enableReserveRaw;
+        this.imageUrl = builder.imageUrl;
+        this.imageUrls = builder.imageUrls;
         this.onCompressMultiplePicsListener = builder.onCompressMultiplePicsListener;
         this.onCompressSinglePicListener = builder.onCompressSinglePicListener;
 
@@ -64,7 +70,7 @@ public class EasyImgCompress {
          */
         private String imageUrl = "";
         /**
-         * 单张图片地址
+         * 多张图片地址
          */
         private List<String> imageUrls = new ArrayList<>();
         /**
@@ -187,10 +193,44 @@ public class EasyImgCompress {
      * 开启压缩
      */
     private void startCompress() {
-        //TODO 第一步 快速粗略的进行尺寸压缩 有效减小图片大小 防止oom
+        if (TextUtils.isEmpty(imageUrl) && (imageUrls == null || imageUrls.size() == 0)) {
+            if (onCompressSinglePicListener != null) {
+                onCompressSinglePicListener.onError("请传入要压缩的图片");
+                return;
+            }
+        }
+
+        if (!TextUtils.isEmpty(imageUrl)) {
+            //对单张图片进行压缩
+            compressImg();
+        }
+
+        if (imageUrls.size() > 0) {
+            //对多张图片进行压缩
+            compressImgs();
+        }
+    }
+
+    /**
+     * 压缩单张图片
+     */
+    private void compressImg() {
+        //第一步 快速粗略的进行尺寸压缩 有效减小图片大小 防止oom
+        Bitmap bm = ImgCompressUtil.compressBySampleSize(imageUrl, maxPx);
 
         //TODO 第二步 精确尺寸压缩
-        //TODO 第三步 质量压缩 压缩到指定大小 比如100kb
+
+        //第三步 质量压缩 压缩到指定大小 比如100kb
+        bm = ImgCompressUtil.compressByQuality(bm, maxSize);
+
+        //TODO 第四步 写入文件
+
+    }
+
+    /**
+     * 压缩多张图片
+     */
+    private void compressImgs() {
     }
 
 }

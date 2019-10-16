@@ -10,6 +10,7 @@ import android.os.Environment;
 import android.util.Log;
 import android.view.View;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -19,21 +20,39 @@ import java.io.IOException;
 public class ImgCompressUtil {
 
     /**
-     * 采样率压缩
+     * 计算采样率
      *
-     * @param bitmap
-     * @param sampleSize 采样率为2的整数倍，非整数倍四舍五入，如4的话，就是原图的1/4
-     * @return 尺寸变化
+     * @return
      */
-    public static Bitmap getBitmap(Bitmap bitmap, int sampleSize) {
+    private static int calculateInSampleSize(BitmapFactory.Options options, int maxPx) {
+        int inSampleSize = 1;
+        final int height = options.outHeight;
+        final int width = options.outWidth;
+
+        if (height > maxPx || width > maxPx) {
+            final int heightRatio = Math.round((float) height / (float) maxPx);
+            final int widthRatio = Math.round((float) width / (float) maxPx);
+
+            inSampleSize = heightRatio < widthRatio ? widthRatio : heightRatio;
+        }
+
+        return inSampleSize;
+    }
+
+    /**
+     * 采样率压缩
+     */
+    public static Bitmap compressBySampleSize(String filePath, int maxPx) {
         BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inSampleSize = sampleSize;
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
-        byte[] bytes = baos.toByteArray();
-        Bitmap bit = BitmapFactory.decodeByteArray(bytes, 0, bytes.length, options);
-        Log.i("info", "图片大小：" + bit.getByteCount());//2665296  10661184
-        return bit;
+        options.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(filePath, options);
+
+        options.inSampleSize = calculateInSampleSize(options, maxPx);
+
+        options.inJustDecodeBounds = false;
+
+        Bitmap bm = BitmapFactory.decodeFile(filePath, options);
+        return bm;
     }
 
     /**
@@ -55,22 +74,23 @@ public class ImgCompressUtil {
     /**
      * 图片质量压缩
      *
-     * @param src
-     * @param maxByteSize
+     * @param bm
+     * @param maxSize
      * @return
      */
-    public static Bitmap compressByQuality(Bitmap src, long maxByteSize) {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    public static Bitmap compressByQuality(Bitmap bm, long maxSize) {
         int quality = 100;
-        src.compress(Bitmap.CompressFormat.JPEG, quality, baos);
-        while (baos.toByteArray().length > maxByteSize && quality > 0) {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        bm.compress(Bitmap.CompressFormat.JPEG, quality, baos);
+
+        while (baos.toByteArray().length / 1024 > maxSize && quality > 0) {
             baos.reset();
-            src.compress(Bitmap.CompressFormat.JPEG, quality -= 5, baos);
+            bm.compress(Bitmap.CompressFormat.JPEG, quality, baos);
+            quality -= 5;
         }
-        if (quality < 0) return null;
-        byte[] bytes = baos.toByteArray();
-        Bitmap bit = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-        return bit;
+        ByteArrayInputStream inputStream = new ByteArrayInputStream(baos.toByteArray());
+        Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
+        return bitmap;
     }
 
     public static Bitmap compressByFormat(Bitmap bitmap, int format) {

@@ -13,10 +13,10 @@ public interface OnCompressMultiplePicsListener {
     /**
      * 压缩成功
      */
-    void onSuccess(List<File> files);
+    void onSuccess(List<File> successFiles);
 
     /**
      * 压缩出错
      */
-    void onError(List<String> images, String error);
+    void onHasError(List<File> successFiles, List<String> errorImages, List<String> errorMsgs);
 }

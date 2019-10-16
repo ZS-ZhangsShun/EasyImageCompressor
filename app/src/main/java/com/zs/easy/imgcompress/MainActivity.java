@@ -52,7 +52,7 @@ public class MainActivity extends AppCompatActivity {
                     }
 
                     @Override
-                    public void onError(List<String> images, String error) {
+                    public void onHasError(List<File> successFiles, List<String> errorImages, List<String> errorMsgs) {
 
                     }
                 }).start();

@@ -26,6 +26,8 @@ public class EasyImgCompress {
     private boolean enablePxCompress = true;
     private boolean enableQualityCompress = true;
     private boolean enableReserveRaw = true;
+    private OnCompressSinglePicListener onCompressSinglePicListener;
+    private OnCompressMultiplePicsListener onCompressMultiplePicsListener;
 
     /**
      * builder设计模式
@@ -41,8 +43,10 @@ public class EasyImgCompress {
         this.enablePxCompress = builder.enablePxCompress;
         this.enableQualityCompress = builder.enableQualityCompress;
         this.enableReserveRaw = builder.enableReserveRaw;
+        this.onCompressMultiplePicsListener = builder.onCompressMultiplePicsListener;
+        this.onCompressSinglePicListener = builder.onCompressSinglePicListener;
 
-        init();
+        startCompress();
     }
 
     public static Builder with(Context context) {
@@ -179,8 +183,14 @@ public class EasyImgCompress {
         }
     }
 
-    private void init() {
+    /**
+     * 开启压缩
+     */
+    private void startCompress() {
+        //TODO 第一步 快速粗略的进行尺寸压缩 有效减小图片大小 防止oom
 
+        //TODO 第二步 精确尺寸压缩
+        //TODO 第三步 质量压缩 压缩到指定大小 比如100kb
     }
 
 }

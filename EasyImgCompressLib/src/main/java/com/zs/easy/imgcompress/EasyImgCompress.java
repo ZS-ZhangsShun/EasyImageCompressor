@@ -1,9 +1,15 @@
 package com.zs.easy.imgcompress;
 
+import android.Manifest;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.os.Build;
+import android.os.Environment;
 import android.text.TextUtils;
+import android.util.Log;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,7 +30,7 @@ public class EasyImgCompress {
     private int unCompressMinPx = 1000;
     private int maxPx = 1200;
     private int maxSize = 200;
-    private String cacheDir = context.getCacheDir().getPath() + File.separator + "CommpressCache";
+    private String cacheDir = "";
     private boolean enablePxCompress = true;
     private boolean enableQualityCompress = true;
     private boolean enableReserveRaw = true;
@@ -38,7 +44,7 @@ public class EasyImgCompress {
      *
      * @param builder
      */
-    private EasyImgCompress(Builder builder) {
+    private EasyImgCompress(SinglePicBuilder builder) {
         this.context = builder.context;
         this.unCompressMinPx = builder.unCompressMinPx;
         this.maxPx = builder.maxPx;
@@ -48,27 +54,253 @@ public class EasyImgCompress {
         this.enableQualityCompress = builder.enableQualityCompress;
         this.enableReserveRaw = builder.enableReserveRaw;
         this.imageUrl = builder.imageUrl;
-        this.imageUrls = builder.imageUrls;
-        this.onCompressMultiplePicsListener = builder.onCompressMultiplePicsListener;
         this.onCompressSinglePicListener = builder.onCompressSinglePicListener;
 
-        startCompress();
-    }
-
-    public static Builder with(Context context) {
-        return new Builder(context);
+        startCompressForSingle();
     }
 
     /**
-     * Builder 构造类
+     * builder设计模式
+     *
+     * @param builder
      */
-    public static final class Builder {
+    private EasyImgCompress(MultiPicsBuilder builder) {
+        this.context = builder.context;
+        this.unCompressMinPx = builder.unCompressMinPx;
+        this.maxPx = builder.maxPx;
+        this.maxSize = builder.maxSize;
+        this.cacheDir = builder.cacheDir;
+        this.enablePxCompress = builder.enablePxCompress;
+        this.enableQualityCompress = builder.enableQualityCompress;
+        this.enableReserveRaw = builder.enableReserveRaw;
+        this.imageUrls = builder.imageUrls;
+        this.onCompressMultiplePicsListener = builder.onCompressMultiplePicsListener;
+
+        startCompressForMulty();
+    }
+
+    public static SinglePicBuilder withSinglePic(Context context, String imageUrl) {
+        return new SinglePicBuilder(context, imageUrl);
+    }
+
+    public static MultiPicsBuilder withMultiPics(Context context, List<String> imageUrls) {
+        return new MultiPicsBuilder(context, imageUrls);
+    }
+
+    /**
+     * 开启压缩
+     */
+    private void startCompressForSingle() {
+        //校验图片
+        if (TextUtils.isEmpty(imageUrl)) {
+            if (onCompressSinglePicListener != null) {
+                onCompressSinglePicListener.onError("请传入要压缩的图片");
+            }
+            return;
+        }
+        Log.i(TAG, "原图片地址：" + imageUrl);
+        Log.i(TAG, "保存地址：" + cacheDir);
+        Log.i(TAG, Environment.getExternalStorageDirectory().getAbsolutePath());
+        //校验权限
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            int writePermission = context.checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+            if (writePermission != PackageManager.PERMISSION_GRANTED) {
+                if (onCompressSinglePicListener != null) {
+                    onCompressSinglePicListener.onError("请先申请对应的sd卡读写权限");
+                }
+                return;
+            }
+        }
+        //对单张图片进行压缩
+        compressImg();
+    }
+
+    /**
+     * 开启压缩
+     */
+    private void startCompressForMulty() {
+        if (imageUrls == null || imageUrls.size() == 0) {
+            if (onCompressMultiplePicsListener != null) {
+                List<String> errors = new ArrayList<>();
+                errors.add("请传入要压缩的图片");
+                onCompressMultiplePicsListener.onHasError(new ArrayList<File>(), new ArrayList<String>(), errors);
+            }
+            return;
+        }
+
+        //对多张图片进行压缩
+        compressImgs();
+
+    }
+
+    /**
+     * 压缩单张图片
+     */
+    private void compressImg() {
+        File originalFile = new File(imageUrl);
+        if (!originalFile.isFile() || !originalFile.exists()) {
+            if (onCompressSinglePicListener != null) {
+                onCompressSinglePicListener.onError("出错了！ 您传入的文件不存在！或者不是一个文件");
+            }
+            return;
+        }
+
+        if (cacheDir.contains(".")) {
+            if (onCompressSinglePicListener != null) {
+                onCompressSinglePicListener.onError("出错了，请检查保存路径格式，当前保存路径为：" + cacheDir + " 规范的保存路径示例：/data/data/<application package name>/cache 注意要传入一个文件夹的路径");
+            }
+            return;
+        }
+        //第一步 快速粗略的进行尺寸压缩 有效减小图片大小 防止oom
+        Bitmap bm = ImgCompressUtil.compressBySampleSize(imageUrl, maxPx);
+        if (bm == null && onCompressSinglePicListener != null) {
+            onCompressSinglePicListener.onError("出错了，请检查文件是否具有读写权限");
+            return;
+        }
+        //TODO 第二步 精确尺寸压缩
+        //第三步 质量压缩 压缩到指定大小 比如100kb
+        ByteArrayOutputStream baos = ImgCompressUtil.compressByQualityForByteArray(bm, maxSize);
+        // 第四步 写入文件
+        File files = new File(cacheDir);
+        if (!files.exists()) {
+            files.mkdirs();
+        }
+        File file = ImgCompressUtil.saveBitmap(baos, cacheDir + File.separator + System.currentTimeMillis() + ".jpg");
+        if (onCompressSinglePicListener == null) {
+            return;
+        }
+        if (file != null && file.exists()) {
+            onCompressSinglePicListener.onSuccess(file);
+        } else {
+            onCompressSinglePicListener.onError("请检查：1、保存路径格式，当前保存路径为："
+                    + cacheDir + " 规范的保存路径示例：/data/data/<application package name>/cache 注意要传入一个文件夹的路径"
+                    + "2、当前保存路径是否有读写权限");
+        }
+    }
+
+    /**
+     * 压缩多张图片
+     */
+    private void compressImgs() {
+    }
+
+
+    /**
+     * SinglePicBuilder 构造类
+     */
+    public static class SinglePicBuilder {
 
         private Context context;
         /**
          * 单张图片地址
          */
         private String imageUrl = "";
+        /**
+         * 最小像素不压缩 默认1000 如果宽高都不大于1000 那么不进行像素采样压缩，质量压缩该怎么压缩就怎么压缩
+         */
+        private int unCompressMinPx = 1000;
+        /**
+         * 长或宽不超过最大像素 默认1200
+         */
+        private int maxPx = 1200;
+        /**
+         * 压缩到的最大大小 单位KB 默认200KB
+         */
+        private int maxSize = 200;
+        /**
+         * 图片压缩后的缓存路径 默认 /data/data/<application package>/cache/CommpressCache
+         * <p>
+         * 记录一下
+         * public String getDiskCacheDir(Context context) {  
+         *     String cachePath = null;  
+         *     if (Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())  
+         *             || !Environment.isExternalStorageRemovable()) {  
+         *         cachePath = context.getExternalCacheDir().getPath();  
+         *     } else {  
+         *         cachePath = context.getCacheDir().getPath();  
+         *     }  
+         *     return cachePath;  
+         * }  
+         * 当SD卡存在或者SD卡不可被移除的时候，就调用getExternalCacheDir()方法来获取缓存路径，否则就调用getCacheDir()方法来获取缓存路径。
+         * 前者获取到的就是 /sdcard/Android/data/<application package>/cache 这个路径
+         * 而后者获取到的是 /data/data/<application package>/cache 这个路径。
+         */
+        private String cacheDir = "";
+        /**
+         * 是否启用像素压缩 默认true
+         */
+        private boolean enablePxCompress = true;
+        /**
+         * 是否启用质量压缩 默认true
+         */
+        private boolean enableQualityCompress = true;
+        /**
+         * 是否保留源文件 默认true
+         */
+        private boolean enableReserveRaw = true;
+        /**
+         * 单张图片压缩的监听
+         */
+        private OnCompressSinglePicListener onCompressSinglePicListener;
+
+        public SinglePicBuilder(Context context, String imageUrl) {
+            this.context = context;
+            this.imageUrl = imageUrl;
+            this.cacheDir = context.getCacheDir().getPath() + File.separator + "CommpressCache";
+        }
+
+        public SinglePicBuilder unCompressMinPx(int unCompressMinPx) {
+            this.unCompressMinPx = unCompressMinPx;
+            return this;
+        }
+
+        public SinglePicBuilder maxPx(int maxPx) {
+            this.maxPx = maxPx;
+            return this;
+        }
+
+        public SinglePicBuilder maxSize(int maxSize) {
+            this.maxSize = maxSize;
+            return this;
+        }
+
+        public SinglePicBuilder cacheDir(String cacheDir) {
+            this.cacheDir = cacheDir;
+            return this;
+        }
+
+        public SinglePicBuilder enablePxCompress(boolean enablePxCompress) {
+            this.enablePxCompress = enablePxCompress;
+            return this;
+        }
+
+        public SinglePicBuilder enableReserveRaw(boolean enableReserveRaw) {
+            this.enableReserveRaw = enableReserveRaw;
+            return this;
+        }
+
+        public SinglePicBuilder enableQualityCompress(boolean enableQualityCompress) {
+            this.enableQualityCompress = enableQualityCompress;
+            return this;
+        }
+
+        public SinglePicBuilder setOnCompressSinglePicListener(OnCompressSinglePicListener onCompressSinglePicListener) {
+            this.onCompressSinglePicListener = onCompressSinglePicListener;
+            return this;
+        }
+
+        public EasyImgCompress start() {
+            return new EasyImgCompress(this);
+        }
+
+    }
+
+    /**
+     * MultiPicsBuilder 构造类
+     */
+    public static class MultiPicsBuilder {
+
+        private Context context;
         /**
          * 多张图片地址
          */
@@ -103,7 +335,7 @@ public class EasyImgCompress {
          * 前者获取到的就是 /sdcard/Android/data/<application package>/cache 这个路径
          * 而后者获取到的是 /data/data/<application package>/cache 这个路径。
          */
-        private String cacheDir = context.getCacheDir().getPath() + File.separator + "CommpressCache";
+        private String cacheDir = "";
         /**
          * 是否启用像素压缩 默认true
          */
@@ -117,69 +349,52 @@ public class EasyImgCompress {
          */
         private boolean enableReserveRaw = true;
         /**
-         * 单张图片压缩的监听
-         */
-        private OnCompressSinglePicListener onCompressSinglePicListener;
-        /**
          * 多张图片压缩的监听
          */
         private OnCompressMultiplePicsListener onCompressMultiplePicsListener;
 
-        public Builder(Context context) {
+        public MultiPicsBuilder(Context context, List<String> imageUrls) {
             this.context = context;
-        }
-
-        public Builder load(String imageUrl) {
-            this.imageUrl = imageUrl;
-            return this;
-        }
-
-        public Builder load(List<String> imageUrls) {
             this.imageUrls = imageUrls;
-            return this;
+            this.cacheDir = context.getCacheDir().getPath() + File.separator + "CommpressCache";
         }
 
-        public Builder unCompressMinPx(int unCompressMinPx) {
+        public MultiPicsBuilder unCompressMinPx(int unCompressMinPx) {
             this.unCompressMinPx = unCompressMinPx;
             return this;
         }
 
-        public Builder maxPx(int maxPx) {
+        public MultiPicsBuilder maxPx(int maxPx) {
             this.maxPx = maxPx;
             return this;
         }
 
-        public Builder maxSize(int maxSize) {
+        public MultiPicsBuilder maxSize(int maxSize) {
             this.maxSize = maxSize;
             return this;
         }
 
-        public Builder cacheDir(String autoReconnect) {
+        public MultiPicsBuilder cacheDir(String autoReconnect) {
             this.cacheDir = cacheDir;
             return this;
         }
 
-        public Builder enablePxCompress(boolean enablePxCompress) {
+        public MultiPicsBuilder enablePxCompress(boolean enablePxCompress) {
             this.enablePxCompress = enablePxCompress;
             return this;
         }
 
-        public Builder enableReserveRaw(boolean enableReserveRaw) {
+        public MultiPicsBuilder enableReserveRaw(boolean enableReserveRaw) {
             this.enableReserveRaw = enableReserveRaw;
             return this;
         }
 
-        public Builder enableQualityCompress(boolean enableQualityCompress) {
+        public MultiPicsBuilder enableQualityCompress(boolean enableQualityCompress) {
             this.enableQualityCompress = enableQualityCompress;
             return this;
         }
 
-        public Builder setOnCompressSinglePicListener(OnCompressSinglePicListener onCompressSinglePicListener) {
-            this.onCompressSinglePicListener = onCompressSinglePicListener;
-            return this;
-        }
-
-        public Builder setOnCompressMultiplePicsListener(OnCompressMultiplePicsListener onCompressMultiplePicsListener) {
+        public MultiPicsBuilder setOnCompressMultiplePicsListener(OnCompressMultiplePicsListener onCompressMultiplePicsListener) {
             this.onCompressMultiplePicsListener = onCompressMultiplePicsListener;
             return this;
         }
@@ -187,50 +402,6 @@ public class EasyImgCompress {
         public EasyImgCompress start() {
             return new EasyImgCompress(this);
         }
-    }
-
-    /**
-     * 开启压缩
-     */
-    private void startCompress() {
-        if (TextUtils.isEmpty(imageUrl) && (imageUrls == null || imageUrls.size() == 0)) {
-            if (onCompressSinglePicListener != null) {
-                onCompressSinglePicListener.onError("请传入要压缩的图片");
-                return;
-            }
-        }
-
-        if (!TextUtils.isEmpty(imageUrl)) {
-            //对单张图片进行压缩
-            compressImg();
-        }
-
-        if (imageUrls.size() > 0) {
-            //对多张图片进行压缩
-            compressImgs();
-        }
-    }
-
-    /**
-     * 压缩单张图片
-     */
-    private void compressImg() {
-        //第一步 快速粗略的进行尺寸压缩 有效减小图片大小 防止oom
-        Bitmap bm = ImgCompressUtil.compressBySampleSize(imageUrl, maxPx);
-
-        //TODO 第二步 精确尺寸压缩
-
-        //第三步 质量压缩 压缩到指定大小 比如100kb
-        bm = ImgCompressUtil.compressByQuality(bm, maxSize);
-
-        //TODO 第四步 写入文件
-
-    }
-
-    /**
-     * 压缩多张图片
-     */
-    private void compressImgs() {
     }
 
 }

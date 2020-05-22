@@ -10,6 +10,7 @@ import android.os.Environment;
 import android.util.Log;
 import android.view.View;
 
+import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -58,27 +59,11 @@ public class ImgCompressUtil {
     /**
      * 图片质量压缩
      *
-     * @param bitmap
-     * @param quality
-     * @return 尺寸不变，质量变小
-     */
-    public static Bitmap compressByQuality(Bitmap bitmap, int quality) {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.JPEG, quality, baos);
-        byte[] bytes = baos.toByteArray();
-        Bitmap bit = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-        Log.i("info", "图片大小：" + bit.getByteCount());//10661184
-        return bit;
-    }
-
-    /**
-     * 图片质量压缩
-     *
      * @param bm
      * @param maxSize
      * @return
      */
-    public static Bitmap compressByQuality(Bitmap bm, long maxSize) {
+    public static Bitmap compressByQualityForBitmap(Bitmap bm, int maxSize) {
         int quality = 100;
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         bm.compress(Bitmap.CompressFormat.JPEG, quality, baos);
@@ -93,13 +78,80 @@ public class ImgCompressUtil {
         return bitmap;
     }
 
-    public static Bitmap compressByFormat(Bitmap bitmap, int format) {
+    /**
+     * 图片质量压缩
+     *
+     * @param bm
+     * @param maxSize
+     * @return
+     */
+    public static ByteArrayOutputStream compressByQualityForByteArray(Bitmap bm, int maxSize) {
+        int quality = 100;
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
-        byte[] bytes = baos.toByteArray();
-        Bitmap bit = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-        Log.i("info", "图片大小：" + bit.getByteCount());//10661184
-        return bit;
+        bm.compress(Bitmap.CompressFormat.JPEG, quality, baos);
+
+        while (baos.toByteArray().length / 1024 > maxSize && quality > 0) {
+            baos.reset();
+            bm.compress(Bitmap.CompressFormat.JPEG, quality, baos);
+            quality -= 5;
+        }
+        return baos;
+    }
+
+    /**
+     * 保存bitmap为本地图片文件
+     *
+     * @param bitmap
+     * @param path
+     * @return
+     */
+    public static File saveBitmap(Bitmap bitmap, String path) {
+        File file = new File(path);
+        try {
+            BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(file));
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bos);
+            bos.flush();
+            bos.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+            bitmap.recycle();
+            return null;
+        }
+        return file;
+    }
+
+    /**
+     * 保存字节数组为本地图片文件
+     *
+     * @param baos
+     * @param path
+     * @return
+     */
+    public static File saveBitmap(ByteArrayOutputStream baos, String path) {
+        File file = new File(path);
+        try {
+            FileOutputStream fos = new FileOutputStream(file);
+            fos.write(baos.toByteArray());
+            fos.flush();
+            fos.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return file;
+    }
+
+    public static void saveBitmap(Bitmap bitmap, Bitmap.CompressFormat format) {
+        File file = new File(Environment.getExternalStorageDirectory() + "/img.jpg");
+        try {
+            FileOutputStream fileOutputStream = new FileOutputStream(file);
+            bitmap.compress(format, 100, fileOutputStream);
+            fileOutputStream.flush();
+            fileOutputStream.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -163,26 +215,6 @@ public class ImgCompressUtil {
         return bit;
     }
 
-    /**
-     * 文件加载压缩
-     *
-     * @param filePath
-     * @param inSampleSize
-     * @return
-     */
-    public static Bitmap getBitmap(String filePath, int inSampleSize) {
-        BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inJustDecodeBounds = true;
-        BitmapFactory.decodeFile(filePath, options);//此时不耗费和占用内存
-        options.inSampleSize = inSampleSize;
-        options.inJustDecodeBounds = false;
-        return BitmapFactory.decodeFile(filePath, options);
-    }
-
-    public static Bitmap getBitmap(String filePath) {
-        return BitmapFactory.decodeFile(filePath);
-    }
-
     public static Bitmap view2Bitmap(View view) {
         if (view == null) return null;
         Bitmap ret = Bitmap.createBitmap(view.getWidth(), view.getHeight(), Bitmap.Config.ARGB_8888);
@@ -195,33 +227,5 @@ public class ImgCompressUtil {
         }
         view.draw(canvas);
         return ret;
-    }
-
-    public static void saveBitmap(Bitmap bitmap) {
-        File file = new File(Environment.getExternalStorageDirectory() + "/img.jpg");
-        try {
-            FileOutputStream fileOutputStream = new FileOutputStream(file);
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fileOutputStream);
-            fileOutputStream.flush();
-            fileOutputStream.close();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public static void saveBitmap(Bitmap bitmap, Bitmap.CompressFormat format) {
-        File file = new File(Environment.getExternalStorageDirectory() + "/img.jpg");
-        try {
-            FileOutputStream fileOutputStream = new FileOutputStream(file);
-            bitmap.compress(format, 100, fileOutputStream);
-            fileOutputStream.flush();
-            fileOutputStream.close();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 }

@@ -1,4 +1,4 @@
-package com.zs.easy.imgcompress;
+package com.zs.easy.imgcompress.bean;
 
 public class ErrorBean {
     private String errorImgUrl;

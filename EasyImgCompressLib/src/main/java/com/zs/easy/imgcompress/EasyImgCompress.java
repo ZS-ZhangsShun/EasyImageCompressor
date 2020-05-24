@@ -9,6 +9,11 @@ import android.os.Environment;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.zs.easy.imgcompress.bean.ErrorBean;
+import com.zs.easy.imgcompress.listener.OnCompressMultiplePicsListener;
+import com.zs.easy.imgcompress.listener.OnCompressSinglePicListener;
+import com.zs.easy.imgcompress.util.ImgCompressUtil;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.util.ArrayList;
@@ -103,7 +108,6 @@ public class EasyImgCompress {
         }
         Log.i(TAG, "原图片地址：" + imageUrl);
         Log.i(TAG, "保存地址：" + cacheDir);
-        Log.i(TAG, Environment.getExternalStorageDirectory().getAbsolutePath());
         //校验权限
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             int writePermission = context.checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE);

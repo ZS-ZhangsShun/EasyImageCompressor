@@ -1,4 +1,4 @@
-package com.zs.easy.imgcompress;
+package com.zs.easy.imgcompress.util;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;

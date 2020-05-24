@@ -1,4 +1,6 @@
-package com.zs.easy.imgcompress;
+package com.zs.easy.imgcompress.listener;
+
+import com.zs.easy.imgcompress.bean.ErrorBean;
 
 import java.io.File;
 import java.util.List;

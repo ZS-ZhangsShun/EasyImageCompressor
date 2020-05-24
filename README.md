@@ -26,28 +26,76 @@
 
 #### （1）单张图片压缩
 
-        /**
-         *  把单张图片压缩到100k以内 同时像素不超过1200（宽、高都不大于1200）
-         */
-        EasyImgCompress.withSinglePic(this, "/mnt/sdcard/ttt.jpg")
+        //场景一 把单张图片压缩到100k以内 同时像素不超过1200（宽、高都不大于1200）
+        EasyImgCompress.withSinglePic(this, "/mnt/sdcard/test1.jpg")
                 .maxPx(1200)
                 .maxSize(100)
                 .setOnCompressSinglePicListener(new OnCompressSinglePicListener() {
                     @Override
                     public void onStart() {
-
+                        Log.i("EasyImgCompress", "onStart");
                     }
 
                     @Override
                     public void onSuccess(File file) {
-                        Log.i("EasyImgCompress", "size = " + file.length() + " path= " + file.getAbsolutePath());
+                        Log.i("EasyImgCompress", "onSuccess size = " + GBMBKBUtil.getSize(file.length()) + " getAbsolutePath= " + file.getAbsolutePath());
                     }
 
                     @Override
                     public void onError(String error) {
-                        Log.e("EasyImgCompress", "error = " + error);
+                        Log.e("EasyImgCompress", "onError error = " + error);
                     }
                 }).start();
+
+            过滤EasyImgCompress 看日志：
+            2020-05-24 12:09:29.781 17286-17286/com.zs.easy.imgcompress I/EasyImgCompress: onStart
+            2020-05-24 12:09:29.782 17286-17286/com.zs.easy.imgcompress I/EasyImgCompress: 原图片地址：/mnt/sdcard/test1.jpg
+            2020-05-24 12:09:29.782 17286-17286/com.zs.easy.imgcompress I/EasyImgCompress: 保存地址：/data/user/0/com.zs.easy.imgcompress/cache/CompressCache
+            2020-05-24 12:09:30.931 17286-17286/com.zs.easy.imgcompress I/EasyImgCompress: onSuccess size = 99.31KB    getAbsolutePath= /data/user/0/com.zs.easy.imgcompress/cache/CompressCache/1590293370924.jpg
+
+#### （2）多张图片压缩
+
+        //场景二 把多张图片每一张都压缩到100k以内 同时每张像素不超过1200（宽、高都不大于1200）
+        List<String> imgs = new ArrayList<>();
+        imgs.add(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "test1.jpg");
+        imgs.add(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "test2.jpg");
+        imgs.add(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "test3.jpg");
+        imgs.add(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "test4.jpg");
+        EasyImgCompress.withMultiPics(this, imgs)
+                .maxPx(1200)
+                .maxSize(100)
+                .setOnCompressMultiplePicsListener(new OnCompressMultiplePicsListener() {
+                    @Override
+                    public void onStart() {
+                        Log.i("EasyImgCompress", "onStart");
+                    }
+
+                    @Override
+                    public void onSuccess(List<File> successFiles) {
+                        for (int i = 0; i < successFiles.size(); i++) {
+                            Log.i("EasyImgCompress", "onSuccess: successFile size = " + GBMBKBUtil.getSize(successFiles.get(i).length()) + "path = " + successFiles.get(i).getAbsolutePath());
+                        }
+                    }
+
+                    @Override
+                    public void onHasError(List<File> successFiles, List<ErrorBean> errorImages) {
+                        for (int i = 0; i < successFiles.size(); i++) {
+                            Log.i("EasyImgCompress", "onHasError: successFile  size = " + GBMBKBUtil.getSize(successFiles.get(i).length()) + "path = " + successFiles.get(i).getAbsolutePath());
+                        }
+                        for (int i = 0; i < errorImages.size(); i++) {
+                            Log.e("EasyImgCompress", "onHasError: errorImg url = " + errorImages.get(i).getErrorImgUrl());
+                            Log.e("EasyImgCompress", "onHasError: errorImg msg = " + errorImages.get(i).getErrorMsg());
+                        }
+                    }
+                }).start();
+
+          过滤EasyImgCompress 看日志：
+          2020-05-24 12:09:30.949 17286-17286/com.zs.easy.imgcompress I/EasyImgCompress: onStart
+          2020-05-24 12:09:34.984 17286-17286/com.zs.easy.imgcompress I/EasyImgCompress: onSuccess: successFile size = 99.31KB   path = /data/user/0/com.zs.easy.imgcompress/cache/CompressCache/1590293372046.jpg
+          2020-05-24 12:09:34.988 17286-17286/com.zs.easy.imgcompress I/EasyImgCompress: onSuccess: successFile size = 93.11KB   path = /data/user/0/com.zs.easy.imgcompress/cache/CompressCache/1590293372918.jpg
+          2020-05-24 12:09:34.993 17286-17286/com.zs.easy.imgcompress I/EasyImgCompress: onSuccess: successFile size = 95.21KB   path = /data/user/0/com.zs.easy.imgcompress/cache/CompressCache/1590293374030.jpg
+          2020-05-24 12:09:34.997 17286-17286/com.zs.easy.imgcompress I/EasyImgCompress: onSuccess: successFile size = 94.50KB   path = /data/user/0/com.zs.easy.imgcompress/cache/CompressCache/1590293374976.jpg
+
 
 ## 混淆配置
   -keep class com.zs.easy.imgcompress.** {*;}

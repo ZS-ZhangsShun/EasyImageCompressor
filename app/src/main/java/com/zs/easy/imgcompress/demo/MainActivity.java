@@ -9,9 +9,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
 import com.zs.easy.imgcompress.EasyImgCompress;
-import com.zs.easy.imgcompress.ErrorBean;
-import com.zs.easy.imgcompress.OnCompressMultiplePicsListener;
-import com.zs.easy.imgcompress.OnCompressSinglePicListener;
+import com.zs.easy.imgcompress.bean.ErrorBean;
+import com.zs.easy.imgcompress.listener.OnCompressMultiplePicsListener;
+import com.zs.easy.imgcompress.listener.OnCompressSinglePicListener;
+import com.zs.easy.imgcompress.util.GBMBKBUtil;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -40,19 +41,14 @@ public class MainActivity extends AppCompatActivity {
 
                     @Override
                     public void onSuccess(File file) {
-                        Log.i("EasyImgCompress", "size = " + file.length() + " getAbsolutePath= " + file.getAbsolutePath());
-                        Log.i("EasyImgCompress", "size = " + file.length() + " getName= " + file.getName());
-                        Log.i("EasyImgCompress", "size = " + file.length() + " getPath= " + file.getPath());
-                        Log.i("EasyImgCompress", "size = " + file.length() + " getParent= " + file.getParent());
+                        Log.i("EasyImgCompress", "onSuccess size = " + GBMBKBUtil.getSize(file.length()) + " getAbsolutePath= " + file.getAbsolutePath());
                     }
 
                     @Override
                     public void onError(String error) {
-                        Log.e("EasyImgCompress", "error = " + error);
+                        Log.e("EasyImgCompress", "onError error = " + error);
                     }
-                })
-//                .start()
-        ;
+                }).start();
 
 
         //场景二 把多张图片每一张都压缩到100k以内 同时每张像素不超过1200（宽、高都不大于1200）
@@ -73,14 +69,14 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onSuccess(List<File> successFiles) {
                         for (int i = 0; i < successFiles.size(); i++) {
-                            Log.i("EasyImgCompress", "onSuccess: successFile path = " + successFiles.get(i).getAbsolutePath());
+                            Log.i("EasyImgCompress", "onSuccess: successFile size = " + GBMBKBUtil.getSize(successFiles.get(i).length()) + "path = " + successFiles.get(i).getAbsolutePath());
                         }
                     }
 
                     @Override
                     public void onHasError(List<File> successFiles, List<ErrorBean> errorImages) {
                         for (int i = 0; i < successFiles.size(); i++) {
-                            Log.i("EasyImgCompress", "onHasError: successFile path = " + successFiles.get(i).getAbsolutePath());
+                            Log.i("EasyImgCompress", "onHasError: successFile  size = " + GBMBKBUtil.getSize(successFiles.get(i).length()) + "path = " + successFiles.get(i).getAbsolutePath());
                         }
                         for (int i = 0; i < errorImages.size(); i++) {
                             Log.e("EasyImgCompress", "onHasError: errorImg url = " + errorImages.get(i).getErrorImgUrl());

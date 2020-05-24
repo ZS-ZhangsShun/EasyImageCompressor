@@ -96,6 +96,14 @@
           2020-05-24 12:09:34.993 17286-17286/com.zs.easy.imgcompress I/EasyImgCompress: onSuccess: successFile size = 95.21KB   path = /data/user/0/com.zs.easy.imgcompress/cache/CompressCache/1590293374030.jpg
           2020-05-24 12:09:34.997 17286-17286/com.zs.easy.imgcompress I/EasyImgCompress: onSuccess: successFile size = 94.50KB   path = /data/user/0/com.zs.easy.imgcompress/cache/CompressCache/1590293374976.jpg
 
+#### （3）相关配置
+
+        //1、压缩后的保存路径设置
+        //默认是应用内部缓存 context.getCacheDir().getPath() + File.separator + "CompressCache"
+        // 即：/data/data/<application package>/cache/CompressCache
+        EasyImgCompress.withXXX().cacheDir("传入压缩完后存储的文件夹路径，注意是文件夹路径")
+
+
 
 ## 混淆配置
   -keep class com.zs.easy.imgcompress.** {*;}

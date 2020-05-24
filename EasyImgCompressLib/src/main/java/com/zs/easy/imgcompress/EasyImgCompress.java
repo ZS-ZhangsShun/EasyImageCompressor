@@ -91,6 +91,9 @@ public class EasyImgCompress {
      * 开启压缩
      */
     private void startCompressForSingle() {
+        if (onCompressSinglePicListener != null) {
+            onCompressSinglePicListener.onStart();
+        }
         //校验图片
         if (TextUtils.isEmpty(imageUrl)) {
             if (onCompressSinglePicListener != null) {
@@ -119,18 +122,22 @@ public class EasyImgCompress {
      * 开启压缩
      */
     private void startCompressForMulty() {
+        if (onCompressMultiplePicsListener != null) {
+            onCompressMultiplePicsListener.onStart();
+        }
         if (imageUrls == null || imageUrls.size() == 0) {
             if (onCompressMultiplePicsListener != null) {
-                List<String> errors = new ArrayList<>();
-                errors.add("请传入要压缩的图片");
-                onCompressMultiplePicsListener.onHasError(new ArrayList<File>(), new ArrayList<String>(), errors);
+                List<ErrorBean> errors = new ArrayList<>();
+                ErrorBean errorBean = new ErrorBean();
+                errorBean.setErrorMsg("请传入要压缩的图片");
+                errors.add(errorBean);
+                onCompressMultiplePicsListener.onHasError(new ArrayList<File>(), errors);
             }
             return;
         }
 
         //对多张图片进行压缩
         compressImgs();
-
     }
 
     /**
@@ -145,7 +152,7 @@ public class EasyImgCompress {
             return;
         }
 
-        if (cacheDir.contains(".")) {
+        if (cacheDir.endsWith(".png") || cacheDir.contains(".jpg") || cacheDir.contains(".jpeg") || cacheDir.contains(".webp") || cacheDir.contains(".bmp")) {
             if (onCompressSinglePicListener != null) {
                 onCompressSinglePicListener.onError("出错了，请检查保存路径格式，当前保存路径为：" + cacheDir + " 规范的保存路径示例：/data/data/<application package name>/cache 注意要传入一个文件夹的路径");
             }
@@ -182,6 +189,62 @@ public class EasyImgCompress {
      * 压缩多张图片
      */
     private void compressImgs() {
+        List<File> successFiles = new ArrayList<>();
+        List<ErrorBean> errors = new ArrayList<>();
+        for (int i = 0; i < imageUrls.size(); i++) {
+            String imgUrl = imageUrls.get(i);
+            File originalFile = new File(imgUrl);
+            if (!originalFile.isFile() || !originalFile.exists()) {
+                ErrorBean errorBean = new ErrorBean();
+                errorBean.setErrorImgUrl(imgUrl);
+                errorBean.setErrorMsg("出错了！ 您传入的文件不存在！或者不是一个文件");
+                errors.add(errorBean);
+                continue;
+            }
+
+            if (cacheDir.endsWith(".png") || cacheDir.contains(".jpg") || cacheDir.contains(".jpeg") || cacheDir.contains(".webp") || cacheDir.contains(".bmp")) {
+                ErrorBean errorBean = new ErrorBean();
+                errorBean.setErrorImgUrl(imgUrl);
+                errorBean.setErrorMsg("出错了，请检查保存路径格式，当前保存路径为：" + cacheDir + " 规范的保存路径示例：/data/data/<application package name>/cache 注意要传入一个文件夹的路径");
+                errors.add(errorBean);
+                continue;
+            }
+            //第一步 快速粗略的进行尺寸压缩 有效减小图片大小 防止oom
+            Bitmap bm = ImgCompressUtil.compressBySampleSize(imgUrl, maxPx);
+            if (bm == null) {
+                ErrorBean errorBean = new ErrorBean();
+                errorBean.setErrorImgUrl(imgUrl);
+                errorBean.setErrorMsg("出错了，请检查文件是否具有读写权限");
+                errors.add(errorBean);
+                continue;
+            }
+            //TODO 第二步 精确尺寸压缩
+            //第三步 质量压缩 压缩到指定大小 比如100kb
+            ByteArrayOutputStream baos = ImgCompressUtil.compressByQualityForByteArray(bm, maxSize);
+            // 第四步 写入文件
+            File files = new File(cacheDir);
+            if (!files.exists()) {
+                files.mkdirs();
+            }
+            File file = ImgCompressUtil.saveBitmap(baos, cacheDir + File.separator + System.currentTimeMillis() + ".jpg");
+            if (file != null && file.exists()) {
+                successFiles.add(file);
+            } else {
+                ErrorBean errorBean = new ErrorBean();
+                errorBean.setErrorImgUrl(imgUrl);
+                errorBean.setErrorMsg("请检查：1、保存路径格式，当前保存路径为："
+                        + cacheDir + " 规范的保存路径示例：/data/data/<application package name>/cache 注意要传入一个文件夹的路径"
+                        + "2、当前保存路径是否有读写权限");
+                errors.add(errorBean);
+            }
+        }
+        if (onCompressMultiplePicsListener != null) {
+            if (errors.size() > 0) {
+                onCompressMultiplePicsListener.onHasError(successFiles, errors);
+            } else {
+                onCompressMultiplePicsListener.onSuccess(successFiles);
+            }
+        }
     }
 
 
@@ -208,7 +271,7 @@ public class EasyImgCompress {
          */
         private int maxSize = 200;
         /**
-         * 图片压缩后的缓存路径 默认 /data/data/<application package>/cache/CommpressCache
+         * 图片压缩后的缓存路径 默认 /data/data/<application package>/cache/CompressCache
          * <p>
          * 记录一下
          * public String getDiskCacheDir(Context context) {  
@@ -246,7 +309,7 @@ public class EasyImgCompress {
         public SinglePicBuilder(Context context, String imageUrl) {
             this.context = context;
             this.imageUrl = imageUrl;
-            this.cacheDir = context.getCacheDir().getPath() + File.separator + "CommpressCache";
+            this.cacheDir = context.getCacheDir().getPath() + File.separator + "CompressCache";
         }
 
         public SinglePicBuilder unCompressMinPx(int unCompressMinPx) {
@@ -318,7 +381,7 @@ public class EasyImgCompress {
          */
         private int maxSize = 200;
         /**
-         * 图片压缩后的缓存路径 默认 /data/data/<application package>/cache/CommpressCache
+         * 图片压缩后的缓存路径 默认 /data/data/<application package>/cache/CompressCache
          * <p>
          * 记录一下
          * public String getDiskCacheDir(Context context) {  
@@ -356,7 +419,7 @@ public class EasyImgCompress {
         public MultiPicsBuilder(Context context, List<String> imageUrls) {
             this.context = context;
             this.imageUrls = imageUrls;
-            this.cacheDir = context.getCacheDir().getPath() + File.separator + "CommpressCache";
+            this.cacheDir = context.getCacheDir().getPath() + File.separator + "CompressCache";
         }
 
         public MultiPicsBuilder unCompressMinPx(int unCompressMinPx) {

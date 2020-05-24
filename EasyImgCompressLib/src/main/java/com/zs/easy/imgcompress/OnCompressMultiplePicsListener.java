@@ -18,5 +18,5 @@ public interface OnCompressMultiplePicsListener {
     /**
      * 压缩出错
      */
-    void onHasError(List<File> successFiles, List<String> errorImages, List<String> errorMsgs);
+    void onHasError(List<File> successFiles, List<ErrorBean> errors);
 }

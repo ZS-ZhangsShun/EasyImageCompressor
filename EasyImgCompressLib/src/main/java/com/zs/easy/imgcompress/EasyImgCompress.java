@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.os.Build;
-import android.os.Environment;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -39,6 +38,10 @@ public class EasyImgCompress {
     private boolean enablePxCompress = true;
     private boolean enableQualityCompress = true;
     private boolean enableReserveRaw = true;
+    /**
+     * 此变量为true时表示 只要图片的宽和高大于所设置的maxPx 就通过采样率进行压缩
+     */
+    private boolean forcePxCompress = false;
     private String imageUrl = "";
     private List<String> imageUrls = new ArrayList<>();
     private OnCompressSinglePicListener onCompressSinglePicListener;
@@ -57,6 +60,7 @@ public class EasyImgCompress {
         this.cacheDir = builder.cacheDir;
         this.enablePxCompress = builder.enablePxCompress;
         this.enableQualityCompress = builder.enableQualityCompress;
+        this.forcePxCompress = builder.forcePxCompress;
         this.enableReserveRaw = builder.enableReserveRaw;
         this.imageUrl = builder.imageUrl;
         this.onCompressSinglePicListener = builder.onCompressSinglePicListener;
@@ -77,6 +81,7 @@ public class EasyImgCompress {
         this.cacheDir = builder.cacheDir;
         this.enablePxCompress = builder.enablePxCompress;
         this.enableQualityCompress = builder.enableQualityCompress;
+        this.forcePxCompress = builder.forcePxCompress;
         this.enableReserveRaw = builder.enableReserveRaw;
         this.imageUrls = builder.imageUrls;
         this.onCompressMultiplePicsListener = builder.onCompressMultiplePicsListener;
@@ -163,30 +168,49 @@ public class EasyImgCompress {
             return;
         }
         //第一步 快速粗略的进行尺寸压缩 有效减小图片大小 防止oom
-        Bitmap bm = ImgCompressUtil.compressBySampleSize(imageUrl, maxPx);
-        if (bm == null && onCompressSinglePicListener != null) {
+        Bitmap bitmap = ImgCompressUtil.compressBySampleSize(imageUrl, maxPx, enablePxCompress);
+        if (bitmap == null && onCompressSinglePicListener != null) {
             onCompressSinglePicListener.onError("出错了，请检查文件是否具有读写权限");
             return;
         }
-        //TODO 第二步 精确尺寸压缩
-        //第三步 质量压缩 压缩到指定大小 比如100kb
-        ByteArrayOutputStream baos = ImgCompressUtil.compressByQualityForByteArray(bm, maxSize);
-        // 第四步 写入文件
-        File files = new File(cacheDir);
-        if (!files.exists()) {
-            files.mkdirs();
-        }
-        File file = ImgCompressUtil.saveBitmap(baos, cacheDir + File.separator + System.currentTimeMillis() + ".jpg");
-        if (onCompressSinglePicListener == null) {
-            return;
-        }
-        if (file != null && file.exists()) {
-            onCompressSinglePicListener.onSuccess(file);
+        //第二步 精确尺寸压缩
+        Bitmap bm = null;
+        if (enablePxCompress) {
+            bm = ImgCompressUtil.compressByMatrix(bitmap, maxPx);
         } else {
-            onCompressSinglePicListener.onError("请检查：1、保存路径格式，当前保存路径为："
-                    + cacheDir + " 规范的保存路径示例：/data/data/<application package name>/cache 注意要传入一个文件夹的路径"
-                    + "2、当前保存路径是否有读写权限");
+            bm = bitmap;
         }
+
+        if (bm == null) {
+            onCompressSinglePicError();
+        } else {
+            //第三步 质量压缩 压缩到指定大小 比如100kb
+            ByteArrayOutputStream baos = ImgCompressUtil.compressByQualityForByteArray(bm, maxSize, enableQualityCompress);
+            if (baos == null) {
+                onCompressSinglePicError();
+            } else {
+                // 第四步 写入文件
+                File files = new File(cacheDir);
+                if (!files.exists()) {
+                    files.mkdirs();
+                }
+                File file = ImgCompressUtil.saveBitmap(baos, cacheDir + File.separator + System.currentTimeMillis() + ".jpg");
+                if (onCompressSinglePicListener == null) {
+                    return;
+                }
+                if (file != null && file.exists()) {
+                    onCompressSinglePicListener.onSuccess(file);
+                } else {
+                    onCompressSinglePicError();
+                }
+            }
+        }
+    }
+
+    private void onCompressSinglePicError() {
+        onCompressSinglePicListener.onError("请检查：1、保存路径格式，当前保存路径为："
+                + cacheDir + " 规范的保存路径示例：/data/data/<application package name>/cache 注意要传入一个文件夹的路径"
+                + "2、当前保存路径是否有读写权限");
     }
 
     /**
@@ -214,32 +238,38 @@ public class EasyImgCompress {
                 continue;
             }
             //第一步 快速粗略的进行尺寸压缩 有效减小图片大小 防止oom
-            Bitmap bm = ImgCompressUtil.compressBySampleSize(imgUrl, maxPx);
-            if (bm == null) {
+            Bitmap bitmap = ImgCompressUtil.compressBySampleSize(imgUrl, maxPx, enablePxCompress);
+            if (bitmap == null) {
                 ErrorBean errorBean = new ErrorBean();
                 errorBean.setErrorImgUrl(imgUrl);
                 errorBean.setErrorMsg("出错了，请检查文件是否具有读写权限");
                 errors.add(errorBean);
                 continue;
             }
-            //TODO 第二步 精确尺寸压缩
-            //第三步 质量压缩 压缩到指定大小 比如100kb
-            ByteArrayOutputStream baos = ImgCompressUtil.compressByQualityForByteArray(bm, maxSize);
-            // 第四步 写入文件
-            File files = new File(cacheDir);
-            if (!files.exists()) {
-                files.mkdirs();
-            }
-            File file = ImgCompressUtil.saveBitmap(baos, cacheDir + File.separator + System.currentTimeMillis() + ".jpg");
-            if (file != null && file.exists()) {
-                successFiles.add(file);
+
+            //第二步 精确尺寸压缩
+            Bitmap bm = null;
+            if (enablePxCompress) {
+                bm = ImgCompressUtil.compressByMatrix(bitmap, maxPx);
             } else {
-                ErrorBean errorBean = new ErrorBean();
-                errorBean.setErrorImgUrl(imgUrl);
-                errorBean.setErrorMsg("请检查：1、保存路径格式，当前保存路径为："
-                        + cacheDir + " 规范的保存路径示例：/data/data/<application package name>/cache 注意要传入一个文件夹的路径"
-                        + "2、当前保存路径是否有读写权限");
-                errors.add(errorBean);
+                bm = bitmap;
+            }
+            //第三步 质量压缩 压缩到指定大小 比如100kb
+            ByteArrayOutputStream baos = ImgCompressUtil.compressByQualityForByteArray(bm, maxSize, enableQualityCompress);
+            if (baos == null) {
+                addToErrors(errors, imgUrl);
+            } else {
+                // 第四步 写入文件
+                File files = new File(cacheDir);
+                if (!files.exists()) {
+                    files.mkdirs();
+                }
+                File file = ImgCompressUtil.saveBitmap(baos, cacheDir + File.separator + System.currentTimeMillis() + ".jpg");
+                if (file != null && file.exists()) {
+                    successFiles.add(file);
+                } else {
+                    addToErrors(errors, imgUrl);
+                }
             }
         }
         if (onCompressMultiplePicsListener != null) {
@@ -249,6 +279,15 @@ public class EasyImgCompress {
                 onCompressMultiplePicsListener.onSuccess(successFiles);
             }
         }
+    }
+
+    private void addToErrors(List<ErrorBean> errors, String imgUrl) {
+        ErrorBean errorBean = new ErrorBean();
+        errorBean.setErrorImgUrl(imgUrl);
+        errorBean.setErrorMsg("请检查：1、保存路径格式，当前保存路径为："
+                + cacheDir + " 规范的保存路径示例：/data/data/<application package name>/cache 注意要传入一个文件夹的路径"
+                + "2、当前保存路径是否有读写权限");
+        errors.add(errorBean);
     }
 
 
@@ -302,6 +341,10 @@ public class EasyImgCompress {
          */
         private boolean enableQualityCompress = true;
         /**
+         * 是否启用强制尺寸压缩 保证压缩或的尺寸小于maxPx
+         */
+        private boolean forcePxCompress = true;
+        /**
          * 是否保留源文件 默认true
          */
         private boolean enableReserveRaw = true;
@@ -348,6 +391,11 @@ public class EasyImgCompress {
 
         public SinglePicBuilder enableQualityCompress(boolean enableQualityCompress) {
             this.enableQualityCompress = enableQualityCompress;
+            return this;
+        }
+
+        public SinglePicBuilder forcePxCompress(boolean forcePxCompress) {
+            this.forcePxCompress = forcePxCompress;
             return this;
         }
 
@@ -412,6 +460,10 @@ public class EasyImgCompress {
          */
         private boolean enableQualityCompress = true;
         /**
+         * 是否启用强制图片尺寸压缩 保证尺寸一定小于设置的maxPx
+         */
+        private boolean forcePxCompress = true;
+        /**
          * 是否保留源文件 默认true
          */
         private boolean enableReserveRaw = true;
@@ -458,6 +510,11 @@ public class EasyImgCompress {
 
         public MultiPicsBuilder enableQualityCompress(boolean enableQualityCompress) {
             this.enableQualityCompress = enableQualityCompress;
+            return this;
+        }
+
+        public MultiPicsBuilder forcePxCompress(boolean forcePxCompress) {
+            this.forcePxCompress = forcePxCompress;
             return this;
         }
 

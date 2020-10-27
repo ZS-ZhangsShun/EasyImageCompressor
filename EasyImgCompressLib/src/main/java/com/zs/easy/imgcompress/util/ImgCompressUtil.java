@@ -6,6 +6,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.drawable.Drawable;
+import android.media.ThumbnailUtils;
 import android.os.Environment;
 import android.util.Log;
 import android.view.View;
@@ -43,18 +44,57 @@ public class ImgCompressUtil {
     /**
      * 采样率压缩
      */
-    public static Bitmap compressBySampleSize(String filePath, int maxPx) {
-        BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inJustDecodeBounds = true;
-        BitmapFactory.decodeFile(filePath, options);
+    public static Bitmap compressBySampleSize(String filePath, int maxPx, boolean enablePxCompress) {
+        Bitmap bm = null;
+        try {
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inJustDecodeBounds = true;
+            BitmapFactory.decodeFile(filePath, options);
 
-        options.inSampleSize = calculateInSampleSize(options, maxPx);
+            if (enablePxCompress) {
+                options.inSampleSize = calculateInSampleSize(options, maxPx);
+            } else {
+                options.inSampleSize = 1;
+            }
 
-        options.inJustDecodeBounds = false;
+            options.inJustDecodeBounds = false;
 
-        Bitmap bm = BitmapFactory.decodeFile(filePath, options);
+            bm = BitmapFactory.decodeFile(filePath, options);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return bm;
     }
+
+    public static Bitmap compressByMatrix(Bitmap bm, int maxPx) {
+        Bitmap bitmap = null;
+        try {
+            int curW = bm.getWidth();
+            int curH = bm.getHeight();
+            float scaleWidth = 0;
+            float scaleHeight = 0;
+            Log.i("EasyImgCompress", "compressByMatrix -- current size : " + curW + " x " + curH);
+            if (curH > curW) {
+                scaleHeight = (float) maxPx;
+                scaleWidth = (float) curW * (float) maxPx / (float) curH;
+            } else {
+                scaleWidth = (float) maxPx;
+                scaleHeight = (float) curH * (float) maxPx / (float) curW;
+            }
+            bitmap = ThumbnailUtils.extractThumbnail(bm, (int) scaleWidth, (int) scaleHeight);
+
+//        Matrix matrix = new Matrix();
+//        matrix.postScale(scaleWidth, scaleHeight);
+//        Bitmap bitmap = Bitmap.createBitmap(bm, 0, 0, curW, curH, matrix, false);
+            Log.i("EasyImgCompress", "compressByMatrix -- after compress size : " + bitmap.getWidth() + " x " + bitmap.getHeight());
+            Log.i("info", "图片大小：" + bitmap.getByteCount());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return bitmap;
+//        return ThumbnailUtils.extractThumbnail(bm,)
+    }
+
 
     /**
      * 图片质量压缩
@@ -85,15 +125,21 @@ public class ImgCompressUtil {
      * @param maxSize
      * @return
      */
-    public static ByteArrayOutputStream compressByQualityForByteArray(Bitmap bm, int maxSize) {
-        int quality = 100;
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        bm.compress(Bitmap.CompressFormat.JPEG, quality, baos);
-
-        while (baos.toByteArray().length / 1024 > maxSize && quality > 0) {
-            baos.reset();
+    public static ByteArrayOutputStream compressByQualityForByteArray(Bitmap bm, int maxSize, boolean enableQualityCompress) {
+        ByteArrayOutputStream baos = null;
+        try {
+            int quality = 100;
+            baos = new ByteArrayOutputStream();
             bm.compress(Bitmap.CompressFormat.JPEG, quality, baos);
-            quality -= 5;
+            if (enableQualityCompress) {
+                while (baos.toByteArray().length / 1024 > maxSize && quality > 0) {
+                    baos.reset();
+                    bm.compress(Bitmap.CompressFormat.JPEG, quality, baos);
+                    quality -= 5;
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         return baos;
     }

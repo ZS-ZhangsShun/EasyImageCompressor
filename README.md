@@ -2,6 +2,7 @@
 ## 简介
 
  通过采样率压缩 + 质量压缩，使用简单的配置即可完成图片指定大小指定尺寸的压缩
+ 内部采用线程池设计，默认在子线程执行压缩任务，在主线程回调onStart onError onSuccess方法
 
 ## 使用方法
 
@@ -18,7 +19,7 @@
 
     dependencies {
         ...
-        implementation 'com.github.ZS-ZhangsShun:EasyImageCompressor:1.0.3'
+        implementation 'com.github.ZS-ZhangsShun:EasyImageCompressor:1.0.4'
     }
 
 

@@ -1,10 +1,14 @@
 package com.zs.easy.imgcompress;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -12,6 +16,7 @@ import com.zs.easy.imgcompress.bean.ErrorBean;
 import com.zs.easy.imgcompress.listener.OnCompressMultiplePicsListener;
 import com.zs.easy.imgcompress.listener.OnCompressSinglePicListener;
 import com.zs.easy.imgcompress.util.ImgCompressUtil;
+import com.zs.easy.imgcompress.util.EasyThreadPoolUtil;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -46,6 +51,14 @@ public class EasyImgCompress {
     private List<String> imageUrls = new ArrayList<>();
     private OnCompressSinglePicListener onCompressSinglePicListener;
     private OnCompressMultiplePicsListener onCompressMultiplePicsListener;
+
+    @SuppressLint("HandlerLeak")
+    private Handler handler = new Handler(Looper.getMainLooper()) {
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+        }
+    };
 
     /**
      * builder设计模式
@@ -102,12 +115,17 @@ public class EasyImgCompress {
      */
     private void startCompressForSingle() {
         if (onCompressSinglePicListener != null) {
-            onCompressSinglePicListener.onStart();
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    onCompressSinglePicListener.onStart();
+                }
+            });
         }
         //校验图片
         if (TextUtils.isEmpty(imageUrl)) {
             if (onCompressSinglePicListener != null) {
-                onCompressSinglePicListener.onError("请传入要压缩的图片");
+                onErrorForUIThread("请传入要压缩的图片");
             }
             return;
         }
@@ -118,13 +136,27 @@ public class EasyImgCompress {
             int writePermission = context.checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE);
             if (writePermission != PackageManager.PERMISSION_GRANTED) {
                 if (onCompressSinglePicListener != null) {
-                    onCompressSinglePicListener.onError("请先申请对应的sd卡读写权限");
+                    onErrorForUIThread("请先申请对应的sd卡读写权限");
                 }
                 return;
             }
         }
         //对单张图片进行压缩
-        compressImg();
+        EasyThreadPoolUtil.getInstance().poolExecute(new Runnable() {
+            @Override
+            public void run() {
+                compressImg();
+            }
+        });
+    }
+
+    private void onErrorForUIThread(final String errorMsg) {
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                onCompressSinglePicListener.onError(errorMsg);
+            }
+        });
     }
 
     /**
@@ -146,7 +178,12 @@ public class EasyImgCompress {
         }
 
         //对多张图片进行压缩
-        compressImgs();
+        EasyThreadPoolUtil.getInstance().poolExecute(new Runnable() {
+            @Override
+            public void run() {
+                compressImgs();
+            }
+        });
     }
 
     /**
@@ -156,21 +193,21 @@ public class EasyImgCompress {
         File originalFile = new File(imageUrl);
         if (!originalFile.isFile() || !originalFile.exists()) {
             if (onCompressSinglePicListener != null) {
-                onCompressSinglePicListener.onError("出错了！ 您传入的文件不存在！或者不是一个文件");
+                onErrorForUIThread("出错了！ 您传入的文件不存在！或者不是一个文件");
             }
             return;
         }
 
         if (cacheDir.endsWith(".png") || cacheDir.contains(".jpg") || cacheDir.contains(".jpeg") || cacheDir.contains(".webp") || cacheDir.contains(".bmp")) {
             if (onCompressSinglePicListener != null) {
-                onCompressSinglePicListener.onError("出错了，请检查保存路径格式，当前保存路径为：" + cacheDir + " 规范的保存路径示例：/data/data/<application package name>/cache 注意要传入一个文件夹的路径");
+                onErrorForUIThread("出错了，请检查保存路径格式，当前保存路径为：" + cacheDir + " 规范的保存路径示例：/data/data/<application package name>/cache 注意要传入一个文件夹的路径");
             }
             return;
         }
         //第一步 快速粗略的进行尺寸压缩 有效减小图片大小 防止oom
         Bitmap bitmap = ImgCompressUtil.compressBySampleSize(imageUrl, maxPx, enablePxCompress);
         if (bitmap == null && onCompressSinglePicListener != null) {
-            onCompressSinglePicListener.onError("出错了，请检查文件是否具有读写权限");
+            onErrorForUIThread("出错了，请检查文件是否具有读写权限");
             return;
         }
         //第二步 精确尺寸压缩
@@ -194,12 +231,17 @@ public class EasyImgCompress {
                 if (!files.exists()) {
                     files.mkdirs();
                 }
-                File file = ImgCompressUtil.saveBitmap(baos, cacheDir + File.separator + System.currentTimeMillis() + ".jpg");
+                final File file = ImgCompressUtil.saveBitmap(baos, cacheDir + File.separator + System.currentTimeMillis() + ".jpg");
                 if (onCompressSinglePicListener == null) {
                     return;
                 }
-                if (file != null && file.exists()) {
-                    onCompressSinglePicListener.onSuccess(file);
+                if (file.exists()) {
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            onCompressSinglePicListener.onSuccess(file);
+                        }
+                    });
                 } else {
                     onCompressSinglePicError();
                 }
@@ -208,7 +250,7 @@ public class EasyImgCompress {
     }
 
     private void onCompressSinglePicError() {
-        onCompressSinglePicListener.onError("请检查：1、保存路径格式，当前保存路径为："
+        onErrorForUIThread("请检查：1、保存路径格式，当前保存路径为："
                 + cacheDir + " 规范的保存路径示例：/data/data/<application package name>/cache 注意要传入一个文件夹的路径"
                 + "2、当前保存路径是否有读写权限");
     }
@@ -217,8 +259,8 @@ public class EasyImgCompress {
      * 压缩多张图片
      */
     private void compressImgs() {
-        List<File> successFiles = new ArrayList<>();
-        List<ErrorBean> errors = new ArrayList<>();
+        final List<File> successFiles = new ArrayList<>();
+        final List<ErrorBean> errors = new ArrayList<>();
         for (int i = 0; i < imageUrls.size(); i++) {
             String imgUrl = imageUrls.get(i);
             File originalFile = new File(imgUrl);
@@ -273,11 +315,16 @@ public class EasyImgCompress {
             }
         }
         if (onCompressMultiplePicsListener != null) {
-            if (errors.size() > 0) {
-                onCompressMultiplePicsListener.onHasError(successFiles, errors);
-            } else {
-                onCompressMultiplePicsListener.onSuccess(successFiles);
-            }
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    if (errors.size() > 0) {
+                        onCompressMultiplePicsListener.onHasError(successFiles, errors);
+                    } else {
+                        onCompressMultiplePicsListener.onSuccess(successFiles);
+                    }
+                }
+            });
         }
     }
 

@@ -15,6 +15,7 @@ import android.util.Log;
 import com.zs.easy.imgcompress.bean.ErrorBean;
 import com.zs.easy.imgcompress.listener.OnCompressMultiplePicsListener;
 import com.zs.easy.imgcompress.listener.OnCompressSinglePicListener;
+import com.zs.easy.imgcompress.util.EasyLogUtil;
 import com.zs.easy.imgcompress.util.ImgCompressUtil;
 import com.zs.easy.imgcompress.util.EasyThreadPoolUtil;
 import com.zs.easy.imgcompress.util.ImgHandleUtil;
@@ -35,7 +36,6 @@ import java.util.List;
  * @author zhangshun
  */
 public class EasyImgCompress {
-    private final String TAG = "EasyImgCompress";
     private Context context;
     private int unCompressMinPx = 1000;
     private int maxPx = 1200;
@@ -44,6 +44,7 @@ public class EasyImgCompress {
     private boolean enablePxCompress = true;
     private boolean enableQualityCompress = true;
     private boolean enableReserveRaw = true;
+    private boolean enableLog = false;
     /**
      * 此变量为true时表示 只要图片的宽和高大于所设置的maxPx 就通过采样率进行压缩
      */
@@ -73,6 +74,8 @@ public class EasyImgCompress {
         this.maxSize = builder.maxSize;
         this.cacheDir = builder.cacheDir;
         this.enablePxCompress = builder.enablePxCompress;
+        this.enableLog = builder.enableLog;
+        EasyLogUtil.enableLog = enableLog;
         this.enableQualityCompress = builder.enableQualityCompress;
         this.forcePxCompress = builder.forcePxCompress;
         this.enableReserveRaw = builder.enableReserveRaw;
@@ -94,6 +97,8 @@ public class EasyImgCompress {
         this.maxSize = builder.maxSize;
         this.cacheDir = builder.cacheDir;
         this.enablePxCompress = builder.enablePxCompress;
+        this.enableLog = builder.enableLog;
+        EasyLogUtil.enableLog = enableLog;
         this.enableQualityCompress = builder.enableQualityCompress;
         this.forcePxCompress = builder.forcePxCompress;
         this.enableReserveRaw = builder.enableReserveRaw;
@@ -130,8 +135,8 @@ public class EasyImgCompress {
             }
             return;
         }
-        Log.i(TAG, "原图片地址：" + imageUrl);
-        Log.i(TAG, "保存地址：" + cacheDir);
+        EasyLogUtil.i("原图片地址：" + imageUrl);
+        EasyLogUtil.i("保存地址：" + cacheDir);
         //校验权限
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             int writePermission = context.checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE);
@@ -300,7 +305,7 @@ public class EasyImgCompress {
                 bm = bitmap;
             }
             //第三步 质量压缩 压缩到指定大小 比如100kb 并恢复图片原来的旋转角度
-            ByteArrayOutputStream baos = ImgCompressUtil.compressByQualityForByteArray(bm, maxSize, enableQualityCompress,bitmapDegree);
+            ByteArrayOutputStream baos = ImgCompressUtil.compressByQualityForByteArray(bm, maxSize, enableQualityCompress, bitmapDegree);
             if (baos == null) {
                 addToErrors(errors, imgUrl);
             } else {
@@ -399,6 +404,10 @@ public class EasyImgCompress {
          */
         private boolean enableReserveRaw = true;
         /**
+         * 默认不开启日志
+         */
+        private boolean enableLog = false;
+        /**
          * 单张图片压缩的监听
          */
         private OnCompressSinglePicListener onCompressSinglePicListener;
@@ -431,6 +440,11 @@ public class EasyImgCompress {
 
         public SinglePicBuilder enablePxCompress(boolean enablePxCompress) {
             this.enablePxCompress = enablePxCompress;
+            return this;
+        }
+
+        public SinglePicBuilder enableLog(boolean enableLog) {
+            this.enableLog = enableLog;
             return this;
         }
 
@@ -506,6 +520,10 @@ public class EasyImgCompress {
          */
         private boolean enablePxCompress = true;
         /**
+         * 默认不开启日志
+         */
+        private boolean enableLog = false;
+        /**
          * 是否启用质量压缩 默认true
          */
         private boolean enableQualityCompress = true;
@@ -550,6 +568,11 @@ public class EasyImgCompress {
 
         public MultiPicsBuilder enablePxCompress(boolean enablePxCompress) {
             this.enablePxCompress = enablePxCompress;
+            return this;
+        }
+
+        public MultiPicsBuilder enableLog(boolean enableLog) {
+            this.enableLog = enableLog;
             return this;
         }
 

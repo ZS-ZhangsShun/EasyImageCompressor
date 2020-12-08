@@ -73,7 +73,7 @@ public class ImgCompressUtil {
             int curH = bm.getHeight();
             float scaleWidth = 0;
             float scaleHeight = 0;
-            Log.i("EasyImgCompress", "compressByMatrix -- current size : " + curW + " x " + curH);
+            EasyLogUtil.i("compressByMatrix -- current size : " + curW + " x " + curH);
             if (curH > curW) {
                 scaleHeight = (float) maxPx;
                 scaleWidth = (float) curW * (float) maxPx / (float) curH;
@@ -86,8 +86,8 @@ public class ImgCompressUtil {
 //        Matrix matrix = new Matrix();
 //        matrix.postScale(scaleWidth, scaleHeight);
 //        Bitmap bitmap = Bitmap.createBitmap(bm, 0, 0, curW, curH, matrix, false);
-            Log.i("EasyImgCompress", "compressByMatrix -- after compress size : " + bitmap.getWidth() + " x " + bitmap.getHeight());
-            Log.i("info", "图片大小：" + bitmap.getByteCount());
+            EasyLogUtil.i("compressByMatrix -- after compress size : " + bitmap.getWidth() + " x " + bitmap.getHeight());
+            EasyLogUtil.i( "图片大小：" + bitmap.getByteCount());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -216,7 +216,7 @@ public class ImgCompressUtil {
         Matrix matrix = new Matrix();
         matrix.postScale(scaleWidth, scaleHeight);
         Bitmap bit = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, false);
-        Log.i("info", "图片大小：" + bit.getByteCount());
+        EasyLogUtil.i("图片大小：" + bit.getByteCount());
         return bit;
     }
 
@@ -231,7 +231,7 @@ public class ImgCompressUtil {
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inPreferredConfig = config;
         Bitmap bitmap = BitmapFactory.decodeFile(path, options);
-        Log.i("info", "图片大小：" + bitmap.getByteCount());
+        EasyLogUtil.i("图片大小：" + bitmap.getByteCount());
         return bitmap;
     }
 
@@ -245,7 +245,7 @@ public class ImgCompressUtil {
      */
     public static Bitmap getBitmapByScaleSize(Bitmap bitmap, int width, int height) {
         Bitmap bit = Bitmap.createScaledBitmap(bitmap, width, height, true);
-        Log.i("info", "图片大小：" + bit.getByteCount());
+        EasyLogUtil.i("图片大小：" + bit.getByteCount());
         return bit;
     }
 
@@ -261,7 +261,7 @@ public class ImgCompressUtil {
         bitmap.compress(format, 100, baos);
         byte[] bytes = baos.toByteArray();
         Bitmap bit = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-        Log.i("info", "图片大小：" + bit.getByteCount());
+        EasyLogUtil.i("图片大小：" + bit.getByteCount());
         return bit;
     }
 

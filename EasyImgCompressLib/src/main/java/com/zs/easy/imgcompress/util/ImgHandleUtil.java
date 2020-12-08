@@ -53,9 +53,9 @@ public class ImgHandleUtil {
                     degree = 270;
                     break;
             }
-            Log.i("EasyImgCompress", "cur img path = " + path + " orientation is " + orientation + " degree is " + degree);
+            EasyLogUtil.i("cur img path = " + path + " orientation is " + orientation + " degree is " + degree);
         } catch (Exception e) {
-            Log.d("EasyImgCompress","getBitmapDegree error " + e.toString());
+            EasyLogUtil.e("getBitmapDegree error " + e.toString());
         }
         return degree;
     }

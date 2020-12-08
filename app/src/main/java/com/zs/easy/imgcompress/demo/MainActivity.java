@@ -16,6 +16,7 @@ import com.zs.easy.imgcompress.EasyImgCompress;
 import com.zs.easy.imgcompress.bean.ErrorBean;
 import com.zs.easy.imgcompress.listener.OnCompressMultiplePicsListener;
 import com.zs.easy.imgcompress.listener.OnCompressSinglePicListener;
+import com.zs.easy.imgcompress.util.EasyLogUtil;
 import com.zs.easy.imgcompress.util.GBMBKBUtil;
 
 import java.io.File;
@@ -43,11 +44,12 @@ public class MainActivity extends AppCompatActivity {
                 .maxSize(200)
                 .enablePxCompress(true)
                 .enableQualityCompress(true)
+                .enableLog(true)
                 .setOnCompressSinglePicListener(new OnCompressSinglePicListener() {
                     @Override
                     public void onStart() {
                         Toast.makeText(MainActivity.this, "start", Toast.LENGTH_SHORT).show();
-                        Log.i("EasyImgCompress", "withSinglePic onStart");
+                        EasyLogUtil.i("withSinglePic onStart");
                     }
 
                     @Override
@@ -58,12 +60,12 @@ public class MainActivity extends AppCompatActivity {
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
-                        Log.i("EasyImgCompress", "onSuccess size = " + GBMBKBUtil.getSize(file.length()) + " getAbsolutePath= " + file.getAbsolutePath());
+                        EasyLogUtil.i("onSuccess size = " + GBMBKBUtil.getSize(file.length()) + " getAbsolutePath= " + file.getAbsolutePath());
                     }
 
                     @Override
                     public void onError(String error) {
-                        Log.e("EasyImgCompress", "onError error = " + error);
+                        EasyLogUtil.e("onError error = " + error);
                     }
                 }).start();
 
@@ -76,29 +78,30 @@ public class MainActivity extends AppCompatActivity {
                 .maxSize(100)
                 .enablePxCompress(true)
                 .enableQualityCompress(true)
+                .enableLog(true)
                 .setOnCompressMultiplePicsListener(new OnCompressMultiplePicsListener() {
                     @Override
                     public void onStart() {
                         Toast.makeText(MainActivity.this, "onStart", Toast.LENGTH_SHORT).show();
-                        Log.i("EasyImgCompress", "withMultiPics onStart");
+                        EasyLogUtil.i("withMultiPics onStart");
                     }
 
                     @Override
                     public void onSuccess(List<File> successFiles) {
                         Toast.makeText(MainActivity.this, "onSuccess", Toast.LENGTH_SHORT).show();
                         for (int i = 0; i < successFiles.size(); i++) {
-                            Log.i("EasyImgCompress", "onSuccess: successFile size = " + GBMBKBUtil.getSize(successFiles.get(i).length()) + "path = " + successFiles.get(i).getAbsolutePath());
+                            EasyLogUtil.i("onSuccess: successFile size = " + GBMBKBUtil.getSize(successFiles.get(i).length()) + "path = " + successFiles.get(i).getAbsolutePath());
                         }
                     }
 
                     @Override
                     public void onHasError(List<File> successFiles, List<ErrorBean> errorImages) {
                         for (int i = 0; i < successFiles.size(); i++) {
-                            Log.i("EasyImgCompress", "onHasError: successFile  size = " + GBMBKBUtil.getSize(successFiles.get(i).length()) + "path = " + successFiles.get(i).getAbsolutePath());
+                            EasyLogUtil.i("onHasError: successFile  size = " + GBMBKBUtil.getSize(successFiles.get(i).length()) + "path = " + successFiles.get(i).getAbsolutePath());
                         }
                         for (int i = 0; i < errorImages.size(); i++) {
-                            Log.e("EasyImgCompress", "onHasError: errorImg url = " + errorImages.get(i).getErrorImgUrl());
-                            Log.e("EasyImgCompress", "onHasError: errorImg msg = " + errorImages.get(i).getErrorMsg());
+                            EasyLogUtil.e("onHasError: errorImg url = " + errorImages.get(i).getErrorImgUrl());
+                            EasyLogUtil.e("onHasError: errorImg msg = " + errorImages.get(i).getErrorMsg());
                         }
                     }
                 }).start();

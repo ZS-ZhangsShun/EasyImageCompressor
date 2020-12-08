@@ -3,7 +3,6 @@ package com.zs.easy.imgcompress.demo;
 import android.Manifest;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.media.Image;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -39,7 +38,7 @@ public class MainActivity extends AppCompatActivity {
 
         //场景一 把单张图片压缩到100k以内 同时像素不超过1200（宽、高都不大于1200）
 
-        EasyImgCompress.withSinglePic(MainActivity.this, "/mnt/sdcard/test1.jpg")
+        EasyImgCompress.withSinglePic(MainActivity.this, "/mnt/sdcard/111.jpg")
                 .maxPx(1800)
                 .maxSize(200)
                 .enablePxCompress(true)
@@ -48,7 +47,7 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onStart() {
                         Toast.makeText(MainActivity.this, "start", Toast.LENGTH_SHORT).show();
-                        Log.i("EasyImgCompress", "onStart");
+                        Log.i("EasyImgCompress", "withSinglePic onStart");
                     }
 
                     @Override
@@ -66,7 +65,7 @@ public class MainActivity extends AppCompatActivity {
                     public void onError(String error) {
                         Log.e("EasyImgCompress", "onError error = " + error);
                     }
-                });
+                }).start();
 
         //场景二 把多张图片每一张都压缩到100k以内 同时每张像素不超过1200（宽、高都不大于1200）
         List<String> imgs = new ArrayList<>();
@@ -80,11 +79,13 @@ public class MainActivity extends AppCompatActivity {
                 .setOnCompressMultiplePicsListener(new OnCompressMultiplePicsListener() {
                     @Override
                     public void onStart() {
-                        Log.i("EasyImgCompress", "onStart");
+                        Toast.makeText(MainActivity.this, "onStart", Toast.LENGTH_SHORT).show();
+                        Log.i("EasyImgCompress", "withMultiPics onStart");
                     }
 
                     @Override
                     public void onSuccess(List<File> successFiles) {
+                        Toast.makeText(MainActivity.this, "onSuccess", Toast.LENGTH_SHORT).show();
                         for (int i = 0; i < successFiles.size(); i++) {
                             Log.i("EasyImgCompress", "onSuccess: successFile size = " + GBMBKBUtil.getSize(successFiles.get(i).length()) + "path = " + successFiles.get(i).getAbsolutePath());
                         }

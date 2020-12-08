@@ -17,6 +17,7 @@ import com.zs.easy.imgcompress.listener.OnCompressMultiplePicsListener;
 import com.zs.easy.imgcompress.listener.OnCompressSinglePicListener;
 import com.zs.easy.imgcompress.util.ImgCompressUtil;
 import com.zs.easy.imgcompress.util.EasyThreadPoolUtil;
+import com.zs.easy.imgcompress.util.ImgHandleUtil;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -204,6 +205,7 @@ public class EasyImgCompress {
             }
             return;
         }
+        int bitmapDegree = ImgHandleUtil.getInstance().getBitmapDegree(imageUrl);
         //第一步 快速粗略的进行尺寸压缩 有效减小图片大小 防止oom
         Bitmap bitmap = ImgCompressUtil.compressBySampleSize(imageUrl, maxPx, enablePxCompress);
         if (bitmap == null && onCompressSinglePicListener != null) {
@@ -221,8 +223,8 @@ public class EasyImgCompress {
         if (bm == null) {
             onCompressSinglePicError();
         } else {
-            //第三步 质量压缩 压缩到指定大小 比如100kb
-            ByteArrayOutputStream baos = ImgCompressUtil.compressByQualityForByteArray(bm, maxSize, enableQualityCompress);
+            //第三步 质量压缩  压缩到指定大小 比如100kb 并恢复图片原来的旋转角度
+            ByteArrayOutputStream baos = ImgCompressUtil.compressByQualityForByteArray(bm, maxSize, enableQualityCompress, bitmapDegree);
             if (baos == null) {
                 onCompressSinglePicError();
             } else {
@@ -279,6 +281,7 @@ public class EasyImgCompress {
                 errors.add(errorBean);
                 continue;
             }
+            int bitmapDegree = ImgHandleUtil.getInstance().getBitmapDegree(imgUrl);
             //第一步 快速粗略的进行尺寸压缩 有效减小图片大小 防止oom
             Bitmap bitmap = ImgCompressUtil.compressBySampleSize(imgUrl, maxPx, enablePxCompress);
             if (bitmap == null) {
@@ -296,8 +299,8 @@ public class EasyImgCompress {
             } else {
                 bm = bitmap;
             }
-            //第三步 质量压缩 压缩到指定大小 比如100kb
-            ByteArrayOutputStream baos = ImgCompressUtil.compressByQualityForByteArray(bm, maxSize, enableQualityCompress);
+            //第三步 质量压缩 压缩到指定大小 比如100kb 并恢复图片原来的旋转角度
+            ByteArrayOutputStream baos = ImgCompressUtil.compressByQualityForByteArray(bm, maxSize, enableQualityCompress,bitmapDegree);
             if (baos == null) {
                 addToErrors(errors, imgUrl);
             } else {

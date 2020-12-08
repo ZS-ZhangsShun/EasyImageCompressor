@@ -123,9 +123,10 @@ public class ImgCompressUtil {
      *
      * @param bm
      * @param maxSize
+     * @param bitmapDegree
      * @return
      */
-    public static ByteArrayOutputStream compressByQualityForByteArray(Bitmap bm, int maxSize, boolean enableQualityCompress) {
+    public static ByteArrayOutputStream compressByQualityForByteArray(Bitmap bm, int maxSize, boolean enableQualityCompress, int bitmapDegree) {
         ByteArrayOutputStream baos = null;
         try {
             int quality = 100;
@@ -138,6 +139,7 @@ public class ImgCompressUtil {
                     quality -= 5;
                 }
             }
+            ImgHandleUtil.getInstance().rotateBitmap(bm, bitmapDegree);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -160,7 +162,9 @@ public class ImgCompressUtil {
             bos.close();
         } catch (Exception e) {
             e.printStackTrace();
-            bitmap.recycle();
+            if (bitmap != null) {
+                bitmap.recycle();
+            }
             return null;
         }
         return file;

@@ -84,8 +84,7 @@ public class ImgHandleUtil {
         }
         Matrix matrix = new Matrix();
         matrix.setRotate(degrees, bitmap.getWidth() / 2, bitmap.getHeight() / 2);
-        Bitmap bmp = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
-        bitmap.recycle();
-        return bmp;
+        bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+        return bitmap;
     }
 }

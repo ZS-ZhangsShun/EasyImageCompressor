@@ -137,14 +137,16 @@ public class EasyImgCompress {
         }
         EasyLogUtil.i("原图片地址：" + imageUrl);
         EasyLogUtil.i("保存地址：" + cacheDir);
-        //校验权限
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        
+        //校验权限 -- 仅仅打印日志 不强制要求
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && Build.VERSION.SDK_INT < 33) {
             int writePermission = context.checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE);
             if (writePermission != PackageManager.PERMISSION_GRANTED) {
-                if (onCompressSinglePicListener != null) {
-                    onErrorForUIThread("请先申请对应的sd卡读写权限");
-                }
-                return;
+//                 if (onCompressSinglePicListener != null) {
+//                     onErrorForUIThread("请先申请对应的sd卡读写权限");
+//                 }
+//                 return;
+                EasyLogUtil.i("未赋予sd卡读写权限，请根据项目实际情况处理");
             }
         }
         //对单张图片进行压缩

@@ -4,7 +4,7 @@ android {
     compileSdkVersion 28
     defaultConfig {
         applicationId "com.zs.easy.imgcompress"
-        minSdkVersion 15
+        minSdkVersion 21
         targetSdkVersion 28
         versionCode 1
         versionName "1.0.1"
@@ -20,8 +20,13 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation 'com.android.support:appcompat-v7:28.0.0'
+    implementation "com.android.support:appcompat-v7:${support}"
 //    implementation project(path: ':EasyImgCompressLib')
-    implementation 'com.github.ZS-ZhangsShun:EasyImageCompressor:1.0.7'
+    //easy 系列 公共类库
+    implementation "com.github.ZS-ZhangsShun:EasyCommonUtils:${cfgs.easyCommon}"
+    implementation "com.github.ZS-ZhangsShun:EasyImageCompressor:${cfgs.easyCompress}"
+    //知乎图片加载框架 zhihuMatisse
+    implementation "com.zhihu.android:matisse:${cfgs.zhihuMatisse}"
+    implementation "com.github.bumptech.glide:glide:${cfgs.glideVersion}"
 
 }

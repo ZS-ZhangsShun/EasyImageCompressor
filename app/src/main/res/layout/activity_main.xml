@@ -1,13 +1,179 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     tools:context=".MainActivity">
 
-    <ImageView
-        android:id="@+id/easy_image_iv"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
 
-</RelativeLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_margin="10dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <TextView
+                style="@style/CommonTextStyle"
+                android:text="大小压缩到(kb)：                   " />
+
+            <EditText
+                android:id="@+id/main_compress_size_et"
+                android:layout_width="200dp"
+                android:layout_height="wrap_content"
+                android:textSize="13dp" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <TextView
+                style="@style/CommonTextStyle"
+                android:text="最长边压缩到(px)：               " />
+
+            <EditText
+                android:id="@+id/main_compress_px_et"
+                android:layout_width="200dp"
+                android:layout_height="wrap_content"
+                android:textSize="13dp" />
+
+        </LinearLayout>
+
+
+        <android.support.v7.widget.AppCompatCheckBox
+            android:id="@+id/main_compress_over_original_pic_cb"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="覆盖原图（适用于单张图片或者多张路径相同的图片压缩）"
+            android:textSize="12dp" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <TextView
+                style="@style/CommonTextStyle"
+                android:text="保存地址（默认根路径）： " />
+
+            <EditText
+                android:id="@+id/main_save_address_et"
+                android:layout_width="200dp"
+                android:layout_height="50dp"
+                android:textSize="11dp" />
+
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/main_select_pics_btn"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginTop="10dp"
+            android:text="选择图片" />
+
+        <Button
+            android:id="@+id/main_compress_btn"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginTop="10dp"
+            android:text="开始压缩" />
+
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                style="@style/CommonTextStyle"
+                android:padding="10dp"
+                android:text="压缩前：" />
+
+            <ImageView
+                android:id="@+id/main_before_compress_pic_iv"
+                android:layout_width="150dp"
+                android:layout_height="150dp"
+                android:layout_marginLeft="10dp"
+                android:scaleType="centerInside" />
+
+            <TextView
+                android:id="@+id/main_before_compress_path_tv"
+                style="@style/CommonTextStyle"
+                android:padding="10dp"
+                android:text="路径：" />
+
+            <TextView
+                android:id="@+id/main_before_compress_size_tv"
+                style="@style/CommonTextStyle"
+                android:padding="10dp"
+                android:text="大小：" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginRight="10dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                style="@style/CommonTextStyle"
+                android:padding="10dp"
+                android:text="压缩后：" />
+
+            <ImageView
+                android:id="@+id/main_after_compress_pic_iv"
+                android:layout_width="150dp"
+                android:layout_height="150dp"
+                android:layout_marginLeft="10dp"
+                android:scaleType="centerInside" />
+
+            <TextView
+                android:id="@+id/main_after_compress_path_tv"
+                style="@style/CommonTextStyle"
+                android:padding="10dp"
+                android:text="路径：" />
+
+            <TextView
+                android:id="@+id/main_after_compress_size_tv"
+                style="@style/CommonTextStyle"
+                android:padding="10dp"
+                android:text="大小：" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <ImageView
+                    android:id="@+id/main_after_compress_wx_iv"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp" />
+
+                <ImageView
+                    android:id="@+id/main_after_compress_qq_iv"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:layout_marginLeft="10dp" />
+            </LinearLayout>
+
+        </LinearLayout>
+
+
+    </LinearLayout>
+
+</LinearLayout>

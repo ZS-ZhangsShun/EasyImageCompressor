@@ -2,21 +2,12 @@
 
 buildscript {
     repositories {
-        maven {
-            url 'https://maven.aliyun.com/repository/jcenter'
-        }
-        maven {
-            url 'https://maven.aliyun.com/repository/google'
-        }
-        maven {
-            url 'http://maven.aliyun.com/nexus/content/groups/public'
-        }
-        mavenLocal()
         mavenCentral()
-        maven { url 'https://www.jitpack.io'  }
+        google()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.2.1'
+        classpath 'com.android.tools.build:gradle:3.6.4'
+        classpath 'com.github.dcendents:android-maven-gradle-plugin:2.1'
 
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
@@ -25,18 +16,9 @@ buildscript {
 
 allprojects {
     repositories {
-        maven {
-            url 'https://maven.aliyun.com/repository/jcenter'
-        }
-        maven {
-            url 'https://maven.aliyun.com/repository/google'
-        }
-        maven {
-            url 'http://maven.aliyun.com/nexus/content/groups/public'
-        }
-        mavenLocal()
         mavenCentral()
-        maven { url 'https://www.jitpack.io'  }
+        google()
+        maven { url "https://jitpack.io" }
     }
 }
 
@@ -49,7 +31,7 @@ ext {
     supportLibraryVersion = "28.0.0"
 
     cfgs = [
-            easyCommon  : "1.8.6",
+            easyCommon  : "1.8.61",
             easyCompress: "1.0.7",
             glideVersion: "4.8.0",
             zhihuMatisse: "0.5.2-beta2"

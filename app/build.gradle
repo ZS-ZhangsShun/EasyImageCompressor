@@ -24,7 +24,7 @@ dependencies {
 //    implementation project(path: ':EasyImgCompressLib')
     //easy 系列 公共类库
     implementation "com.github.ZS-ZhangsShun:EasyCommonUtils:${cfgs.easyCommon}"
-    implementation "com.github.ZS-ZhangsShun:EasyImageCompressor:${cfgs.easyCompress}"
+//    implementation "com.github.ZS-ZhangsShun:EasyImageCompressor:${cfgs.easyCompress}"
     //知乎图片加载框架 zhihuMatisse
     implementation "com.zhihu.android:matisse:${cfgs.zhihuMatisse}"
     implementation "com.github.bumptech.glide:glide:${cfgs.glideVersion}"

@@ -563,7 +563,7 @@ public class EasyImgCompress {
             return this;
         }
 
-        public MultiPicsBuilder cacheDir(String autoReconnect) {
+        public MultiPicsBuilder cacheDir(String cacheDir) {
             this.cacheDir = cacheDir;
             return this;
         }

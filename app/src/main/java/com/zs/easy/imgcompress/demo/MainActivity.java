@@ -21,12 +21,13 @@ import com.zhihu.matisse.Matisse;
 import com.zhihu.matisse.MimeType;
 import com.zhihu.matisse.engine.impl.GlideEngine;
 import com.zhihu.matisse.internal.entity.CaptureStrategy;
+import com.zs.easy.common.utils.GBMBKBUtil;
 import com.zs.easy.common.utils.ToastAndLogUtil;
-import com.zs.easy.imgcompress.EasyImgCompress;
-import com.zs.easy.imgcompress.bean.ErrorBean;
-import com.zs.easy.imgcompress.listener.OnCompressMultiplePicsListener;
-import com.zs.easy.imgcompress.util.EasyLogUtil;
-import com.zs.easy.imgcompress.util.GBMBKBUtil;
+//import com.zs.easy.imgcompress.EasyImgCompress;
+//import com.zs.easy.imgcompress.bean.ErrorBean;
+//import com.zs.easy.imgcompress.listener.OnCompressMultiplePicsListener;
+//import com.zs.easy.imgcompress.util.EasyLogUtil;
+//import com.zs.easy.imgcompress.util.GBMBKBUtil;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -167,10 +168,10 @@ public class MainActivity extends Activity implements View.OnClickListener {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_CODE_CHOOSE && resultCode == RESULT_OK) {
             selectPicUrlList.addAll(0, Matisse.obtainPathResult(data));
-            compressWithPics(selectPicUrlList);
+//            compressWithPics(selectPicUrlList);
         }
     }
-
+/*
     private void compressWithPics(List<String> imgs) {
         boolean isInputOk = isInputOk();
         if (!isInputOk) {
@@ -212,7 +213,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
                         }
                     }
                 }).start();
-    }
+    }*/
 
     private boolean isInputOk() {
         String sizeStr = main_compress_size_et.getText().toString().trim();

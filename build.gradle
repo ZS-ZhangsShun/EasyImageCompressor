@@ -2,18 +2,8 @@
 
 buildscript {
     repositories {
-        maven {
-            url 'https://maven.aliyun.com/repository/jcenter'
-        }
-        maven {
-            url 'https://maven.aliyun.com/repository/google'
-        }
-        maven {
-            url 'http://maven.aliyun.com/nexus/content/groups/public'
-        }
-        mavenLocal()
         mavenCentral()
-        maven { url 'https://www.jitpack.io'  }
+        google()
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:3.6.4'
@@ -26,18 +16,13 @@ buildscript {
 
 allprojects {
     repositories {
+        mavenCentral()
+        google()
+        mavenLocal()
         maven {
             url 'https://maven.aliyun.com/repository/jcenter'
         }
-        maven {
-            url 'https://maven.aliyun.com/repository/google'
-        }
-        maven {
-            url 'http://maven.aliyun.com/nexus/content/groups/public'
-        }
-        mavenLocal()
-        mavenCentral()
-        maven { url 'https://www.jitpack.io'  }
+        maven { url "https://jitpack.io" }
     }
 }
 

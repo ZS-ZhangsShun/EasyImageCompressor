@@ -27,7 +27,7 @@ android {
 
                     // You can then customize attributes of the publication as shown below.
                     groupId = 'com.github.ZS-ZhangsShun'
-                    artifactId = 'EasyImageCompressor'
+                    artifactId = 'EasyImgCompressLib'
                     version = versionName
                 }
             }

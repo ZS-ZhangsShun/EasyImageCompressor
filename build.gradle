@@ -36,7 +36,7 @@ ext {
 
     cfgs = [
             easyCommon  : "1.8.61",
-            easyCompress: "1.0.11",
+            easyCompress: "1.0.13",
             glideVersion: "4.8.0",
             zhihuMatisse: "0.5.2-beta2"
     ]

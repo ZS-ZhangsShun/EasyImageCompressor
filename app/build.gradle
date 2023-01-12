@@ -1,12 +1,12 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 31
+    compileSdkVersion 29
 
     defaultConfig {
         applicationId "com.zs.easy.imgcompress"
-        minSdkVersion 15
-        targetSdkVersion 31
+        minSdkVersion 19
+        targetSdkVersion 29
         versionCode 1
         versionName "1.0.1"
     }
@@ -26,7 +26,7 @@ dependencies {
     implementation "com.github.ZS-ZhangsShun:EasyCommonUtils:${cfgs.easyCommon}"
     implementation "com.github.ZS-ZhangsShun:EasyImageCompressor:${cfgs.easyCompress}"
     //知乎图片加载框架 zhihuMatisse
-    implementation "com.zhihu.android:matisse:${cfgs.zhihuMatisse}"
+//    implementation "com.zhihu.android:matisse:${cfgs.zhihuMatisse}"
     implementation "com.github.bumptech.glide:glide:${cfgs.glideVersion}"
 
 }

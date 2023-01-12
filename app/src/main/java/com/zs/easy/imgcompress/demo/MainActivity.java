@@ -5,9 +5,11 @@ import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.provider.MediaStore;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
@@ -17,12 +19,13 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.zhihu.matisse.Matisse;
-import com.zhihu.matisse.MimeType;
-import com.zhihu.matisse.engine.impl.GlideEngine;
-import com.zhihu.matisse.internal.entity.CaptureStrategy;
-import com.zs.easy.common.utils.GBMBKBUtil;
+import com.bumptech.glide.Glide;
+import com.zs.easy.common.utils.LogUtil;
 import com.zs.easy.common.utils.ToastAndLogUtil;
+import com.zs.easy.imgcompress.EasyImgCompress;
+import com.zs.easy.imgcompress.listener.OnCompressSinglePicListener;
+import com.zs.easy.imgcompress.util.EasyLogUtil;
+import com.zs.easy.imgcompress.util.GBMBKBUtil;
 //import com.zs.easy.imgcompress.EasyImgCompress;
 //import com.zs.easy.imgcompress.bean.ErrorBean;
 //import com.zs.easy.imgcompress.listener.OnCompressMultiplePicsListener;
@@ -57,46 +60,11 @@ public class MainActivity extends Activity implements View.OnClickListener {
                     , Manifest.permission.READ_EXTERNAL_STORAGE
                     , Manifest.permission.CAMERA}, 100);
         }
+        EasyLogUtil.enableLog = true;
 
         initView();
         initListener();
         initData();
-
-        //场景一 把单张图片压缩到100k以内 同时像素不超过1200（宽、高都不大于1200）
-
-        /*EasyImgCompress.withSinglePic(MainActivity.this, "/mnt/sdcard/111.jpg")
-                .maxPx(1800)
-                .maxSize(200)
-                .enablePxCompress(true)
-                .enableQualityCompress(true)
-                .setOnCompressSinglePicListener(new OnCompressSinglePicListener() {
-                    @Override
-                    public void onStart() {
-                        Toast.makeText(MainActivity.this, "start", Toast.LENGTH_SHORT).show();
-                        EasyLogUtil.i("withSinglePic onStart");
-                    }
-
-                    @Override
-                    public void onSuccess(File file) {
-                        try {
-                            Bitmap loacalBitmap = getLoacalBitmap(file);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                        EasyLogUtil.i("onSuccess size = " + GBMBKBUtil.getSize(file.length()) + " getAbsolutePath= " + file.getAbsolutePath());
-                    }
-
-                    @Override
-                    public void onError(String error) {
-                        EasyLogUtil.e("onError error = " + error);
-                    }
-                }).start();
-
-        //场景二 把多张图片每一张都压缩到100k以内 同时每张像素不超过1200（宽、高都不大于1200）
-        List<String> imgs = new ArrayList<>();
-        imgs.add(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "test1.jpg");
-        imgs.add(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "点播二级.png");
-        */
     }
 
     private void initView() {
@@ -123,7 +91,6 @@ public class MainActivity extends Activity implements View.OnClickListener {
         main_after_compress_qq_iv.setOnClickListener(this);
     }
 
-
     private void initData() {
         main_compress_size_et.setText("300");
         main_compress_px_et.setText("1000");
@@ -149,27 +116,68 @@ public class MainActivity extends Activity implements View.OnClickListener {
     @Override
     public void onClick(View v) {
         if (v == main_select_pics_btn) {
-            Matisse.from(this)
-                    .choose(MimeType.ofImage())//图片类型
-                    .countable(true)//true:选中后显示数字;false:选中后显示对号
-                    .maxSelectable(300)//可选的最大数
-                    .capture(true)//选择照片时，是否显示拍照
-                    .captureStrategy(new CaptureStrategy(true, "com.star.commodity.release"))
-                    .imageEngine(new GlideEngine())//图片加载引擎
-                    .forResult(REQUEST_CODE_CHOOSE);
+            Intent i = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+            //此参数不生效 仅仅对录制生效
+//        i.putExtra(MediaStore.EXTRA_DURATION_LIMIT, StarConstants.SV_MAX_DURATION);
+//        i.putExtra(MediaStore.EXTRA_SIZE_LIMIT, StarConstants.SV_MAX_SIZE);
+            startActivityForResult(i, REQUEST_CODE_CHOOSE);
+        } else if (v == main_compress_btn) {
+            compressSinglePic();
         }
     }
 
-    /**
-     * 选择图片返回值
-     */
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_CODE_CHOOSE && resultCode == RESULT_OK) {
-            selectPicUrlList.addAll(0, Matisse.obtainPathResult(data));
-//            compressWithPics(selectPicUrlList);
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == REQUEST_CODE_CHOOSE && resultCode == RESULT_OK && null != data) {
+            final Uri uri = data.getData();
+            ImageInfo info = GetInfoFromUri.getImageInfoFromUri(this, uri);
+            final String path = info.filePath;
+            //content://media/external/video/media/574778
+            EasyLogUtil.i("select result uri = " + uri.toString());
+            ///storage/emulated/0/DCIM/Camera/8cf28f4644c61e0c012c9a1714dc997f.mp4
+            EasyLogUtil.i("select result path = " + path);
+            selectPicUrlList.add(0, path);
+            main_before_compress_path_tv.setText(path);
+            main_before_compress_size_tv.setText(GBMBKBUtil.getSize(new File(path).length()));
+            Glide.with(MainActivity.this).load(path).into(main_before_compress_pic_iv);
         }
+    }
+
+    private void compressSinglePic() {
+        //场景一 把单张图片压缩到100k以内 同时像素不超过1200（宽、高都不大于1200）
+        if (!isInputOk()) {
+            return;
+        }
+        EasyImgCompress.withSinglePic(MainActivity.this, selectPicUrlList.get(0))
+                .maxPx(1800)
+                .maxSize(200)
+                .enablePxCompress(true)
+                .enableLog(true)
+                .enableQualityCompress(true)
+                .setOnCompressSinglePicListener(new OnCompressSinglePicListener() {
+                    @Override
+                    public void onStart() {
+                        Toast.makeText(MainActivity.this, "start", Toast.LENGTH_SHORT).show();
+                        EasyLogUtil.i("withSinglePic onStart");
+                    }
+
+                    @Override
+                    public void onSuccess(File file) {
+                        try {
+                            main_after_compress_path_tv.setText(file.getAbsolutePath());
+                            main_after_compress_size_tv.setText(GBMBKBUtil.getSize(file.length()));
+                            Glide.with(MainActivity.this).load(file).into(main_after_compress_pic_iv);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                        EasyLogUtil.i("onSuccess size = " + GBMBKBUtil.getSize(file.length()) + " getAbsolutePath= " + file.getAbsolutePath());
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        EasyLogUtil.e("onError error = " + error);
+                    }
+                }).start();
     }
 /*
     private void compressWithPics(List<String> imgs) {

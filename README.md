@@ -21,7 +21,7 @@
 
     dependencies {
         ...
-        implementation 'com.github.ZS-ZhangsShun:EasyImageCompressor:1.0.15'
+        implementation 'com.github.ZS-ZhangsShun:EasyImageCompressor:1.1.0'
     }
 
 

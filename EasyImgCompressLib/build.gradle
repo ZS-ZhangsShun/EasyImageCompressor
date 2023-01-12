@@ -50,22 +50,3 @@ android {
 
 }
 
-afterEvaluate {
-    publishing {
-        publications {
-            mavenAar(MavenPublication) {
-                afterEvaluate {
-                    artifactId "$project.name"
-                    from components.release
-                }
-            }
-            productionRelease(MavenPublication) {
-                from components.productionRelease
-                groupId = 'com.zs.esay' //groupId 随便取
-                artifactId = 'EasyImageCompressor'  //artifactId 随便取
-                version = '1.0.9'
-            }
-        }
-    }
-}
-

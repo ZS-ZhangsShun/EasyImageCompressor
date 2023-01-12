@@ -148,9 +148,11 @@ public class MainActivity extends Activity implements View.OnClickListener {
         if (!isInputOk()) {
             return;
         }
+        String sizeStr = main_compress_size_et.getText().toString().trim();
+        String pxStr = main_compress_px_et.getText().toString().trim();
         EasyImgCompress.withSinglePic(MainActivity.this, selectPicUrlList.get(0))
-                .maxPx(1800)
-                .maxSize(200)
+                .maxPx(Integer.parseInt(pxStr))
+                .maxSize(Integer.parseInt(sizeStr))
                 .enablePxCompress(true)
                 .enableLog(true)
                 .enableQualityCompress(true)

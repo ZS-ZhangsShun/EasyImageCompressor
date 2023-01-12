@@ -42,6 +42,7 @@ public class EasyImgCompress {
     private int maxSize = 200;
     private String cacheDir = "";
     private boolean enablePxCompress = true;
+    private boolean enableMatrixCompress = false;
     private boolean enableQualityCompress = true;
     private boolean enableReserveRaw = true;
     private boolean enableLog = false;
@@ -74,6 +75,7 @@ public class EasyImgCompress {
         this.maxSize = builder.maxSize;
         this.cacheDir = builder.cacheDir;
         this.enablePxCompress = builder.enablePxCompress;
+        this.enableMatrixCompress = builder.enableMatrixCompress;
         this.enableLog = builder.enableLog;
         EasyLogUtil.enableLog = enableLog;
         this.enableQualityCompress = builder.enableQualityCompress;
@@ -97,6 +99,7 @@ public class EasyImgCompress {
         this.maxSize = builder.maxSize;
         this.cacheDir = builder.cacheDir;
         this.enablePxCompress = builder.enablePxCompress;
+        this.enableMatrixCompress = builder.enableMatrixCompress;
         this.enableLog = builder.enableLog;
         EasyLogUtil.enableLog = enableLog;
         this.enableQualityCompress = builder.enableQualityCompress;
@@ -221,7 +224,7 @@ public class EasyImgCompress {
         }
         //第二步 精确尺寸压缩
         Bitmap bm = null;
-        if (enablePxCompress) {
+        if (enableMatrixCompress) {
             bm = ImgCompressUtil.compressByMatrix(bitmap, maxPx);
         } else {
             bm = bitmap;
@@ -301,7 +304,7 @@ public class EasyImgCompress {
 
             //第二步 精确尺寸压缩
             Bitmap bm = null;
-            if (enablePxCompress) {
+            if (enableMatrixCompress) {
                 bm = ImgCompressUtil.compressByMatrix(bitmap, maxPx);
             } else {
                 bm = bitmap;
@@ -394,6 +397,10 @@ public class EasyImgCompress {
          */
         private boolean enablePxCompress = true;
         /**
+         * 是否启用Matrix进行精确压缩 默认false
+         */
+        private boolean enableMatrixCompress = false;
+        /**
          * 是否启用质量压缩 默认true
          */
         private boolean enableQualityCompress = true;
@@ -442,6 +449,11 @@ public class EasyImgCompress {
 
         public SinglePicBuilder enablePxCompress(boolean enablePxCompress) {
             this.enablePxCompress = enablePxCompress;
+            return this;
+        }
+
+        public SinglePicBuilder enableMatrixCompress(boolean enableMatrixCompress) {
+            this.enableMatrixCompress = enableMatrixCompress;
             return this;
         }
 
@@ -522,6 +534,10 @@ public class EasyImgCompress {
          */
         private boolean enablePxCompress = true;
         /**
+         * 是否启用Matrix进行精确压缩 默认false
+         */
+        private boolean enableMatrixCompress = false;
+        /**
          * 默认不开启日志
          */
         private boolean enableLog = false;
@@ -570,6 +586,10 @@ public class EasyImgCompress {
 
         public MultiPicsBuilder enablePxCompress(boolean enablePxCompress) {
             this.enablePxCompress = enablePxCompress;
+            return this;
+        }
+        public MultiPicsBuilder enableMatrixCompress(boolean enableMatrixCompress) {
+            this.enableMatrixCompress = enableMatrixCompress;
             return this;
         }
 

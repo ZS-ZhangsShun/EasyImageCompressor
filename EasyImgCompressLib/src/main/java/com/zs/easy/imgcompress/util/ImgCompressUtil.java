@@ -87,7 +87,7 @@ public class ImgCompressUtil {
 //        matrix.postScale(scaleWidth, scaleHeight);
 //        Bitmap bitmap = Bitmap.createBitmap(bm, 0, 0, curW, curH, matrix, false);
             EasyLogUtil.i("compressByMatrix -- after compress size : " + bitmap.getWidth() + " x " + bitmap.getHeight());
-            EasyLogUtil.i( "图片大小：" + bitmap.getByteCount());
+//            EasyLogUtil.i( "图片大小：" + bitmap.getByteCount());
         } catch (Exception e) {
             e.printStackTrace();
         }

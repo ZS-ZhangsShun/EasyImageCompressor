@@ -154,6 +154,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 .maxPx(Integer.parseInt(pxStr))
                 .maxSize(Integer.parseInt(sizeStr))
                 .enablePxCompress(true)
+                //打开此开关 会对尺寸精确缩放 但有可能边缘被裁剪
+                .enableMatrixCompress(false)
                 .enableLog(true)
                 .enableQualityCompress(true)
                 .setOnCompressSinglePicListener(new OnCompressSinglePicListener() {
